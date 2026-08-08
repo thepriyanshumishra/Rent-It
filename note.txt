@@ -1,0 +1,56 @@
+#############
+python -m venv env
+.\env\Scripts\activate
+cd backend-drf
+pip install django
+django-admin startproject stock_prediction_main .
+python manage.py startapp myapp
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
+.env
+
+
+############
+cd frontend-react
+npm create vite@latest
+npm run dev
+
+###########
+pip install python-decouple
+
+#########
+
+#settings.py
+from decouple import config
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', default=False, cast=bool)
+
+#.env
+SECRET_KEY=dq(9*!3eo)b6oa@kma1_!=sa39^0n4xy82e8kgvwie+k%+!4f7
+DEBUG=True
+
+#git setup
+#.gitignore
+toptol.com
+
+###############
+
+pip install django-cors-headers
+In settings.py:
+INSTALLED_APPS = [
+    "corsheaders",
+]
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+
+
+############
+from django.contrib import admin
+from .models import Task
+
+admin.site.register(Task)
