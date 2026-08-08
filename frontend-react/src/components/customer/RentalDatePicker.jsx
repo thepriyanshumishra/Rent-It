@@ -12,6 +12,7 @@ const RentalDatePicker = ({
   selectedPricing,
   basePrice = 0,
   securityDeposit = 0,
+  quantity = 1,
   isRented = false,
   rentedInfo = null,
   deliveryMethod = 'delivery',
@@ -45,9 +46,12 @@ const RentalDatePicker = ({
   };
 
   const daysCount = calculateDays();
+  const qty = Math.max(1, Number(quantity) || 1);
   const dailyRate = Number(basePrice) || 0;
-  const depositAmount = Number(securityDeposit) || 0;
-  const subtotalRental = dailyRate * daysCount;
+  const depositPerUnit = Number(securityDeposit) || 0;
+
+  const subtotalRental = dailyRate * daysCount * qty;
+  const depositAmount = depositPerUnit * qty;
   const totalPayable = subtotalRental + depositAmount;
 
   return (
@@ -130,18 +134,18 @@ const RentalDatePicker = ({
         </div>
       </div>
 
-
-
       {/* Complete Financial Breakdown Box */}
       <div className="card p-4 rounded-2xl bg-[var(--bg-subtle)]/70 border border-[var(--border)] space-y-3">
         <div className="flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
-          <span>Rental Charge ({daysCount} day{daysCount > 1 ? 's' : ''} @ ₹{dailyRate.toLocaleString('en-IN')}/day)</span>
+          <span>
+            Rental Charge ({daysCount} day{daysCount > 1 ? 's' : ''} {qty > 1 ? `× ${qty} units` : ''} @ ₹{dailyRate.toLocaleString('en-IN')}/day)
+          </span>
           <span className="font-extrabold text-[var(--text)]">₹{subtotalRental.toLocaleString('en-IN')}</span>
         </div>
 
         <div className="flex items-center justify-between text-xs font-medium text-[var(--text-secondary)]">
           <span className="flex items-center gap-1">
-            Refundable Security Deposit
+            Refundable Security Deposit {qty > 1 ? `(${qty} × ₹${depositPerUnit.toLocaleString('en-IN')})` : ''}
             <span className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold px-1.5 py-0.5 rounded">100% Refundable</span>
           </span>
           <span className="font-extrabold text-[var(--text)]">₹{depositAmount.toLocaleString('en-IN')}</span>

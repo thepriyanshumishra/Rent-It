@@ -13,7 +13,15 @@ const sampleProductMap = {
   8: { name: 'Apple Vision Pro 512GB VR Headset', price: 4000, deposit: 20000, category: 'Electronics' }
 };
 
-const CartItem = ({ item, onRemove }) => {
+const calculateDays = (s, e) => {
+  if (!s || !e) return 3;
+  const start = new Date(s);
+  const end = new Date(e);
+  const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 1;
+};
+
+const CartItem = ({ item, onRemove, onUpdateQuantity }) => {
   if (!item) return null;
 
   const product = item.product || {};
@@ -28,8 +36,13 @@ const CartItem = ({ item, onRemove }) => {
     imageUrl = typeof first === 'string' ? first : (first.url || first.image_url);
   }
 
-  const priceAmount = parseFloat(item.price || product.price || fallbackInfo?.price || 0);
-  const depositAmount = parseFloat(
+  const startDate = item.start_date || item.startDate;
+  const endDate = item.end_date || item.endDate;
+  const daysCount = calculateDays(startDate, endDate);
+
+  const qty = Math.max(1, item.quantity || 1);
+  const unitDailyRate = parseFloat(item.price || product.price || fallbackInfo?.price || 0);
+  const unitDeposit = parseFloat(
     item.securityDeposit ?? 
     item.security_deposit ?? 
     product.security_deposit ?? 
@@ -38,49 +51,104 @@ const CartItem = ({ item, onRemove }) => {
     0
   );
 
+  const totalRental = unitDailyRate * daysCount * qty;
+  const totalDeposit = unitDeposit * qty;
+
+  const handleDecrease = () => {
+    if (qty > 1) {
+      if (onUpdateQuantity) onUpdateQuantity(item.id, qty - 1);
+    } else {
+      if (onRemove) onRemove(item.id);
+    }
+  };
+
+  const handleIncrease = () => {
+    if (onUpdateQuantity) onUpdateQuantity(item.id, qty + 1);
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row gap-4 py-4 border-b border-border last:border-b-0">
-      <div className="w-20 h-20 shrink-0 bg-bg-subtle rounded-2xl overflow-hidden border border-border">
+    <div className="flex flex-col sm:flex-row gap-4 py-5 border-b border-[var(--border)] last:border-b-0">
+      {/* Product Image */}
+      <div className="w-24 h-24 shrink-0 bg-[var(--bg-subtle)] rounded-2xl overflow-hidden border border-[var(--border)]">
         {imageUrl ? (
           <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-accent bg-accent-subtle">
-            <Package className="w-7 h-7" />
+          <div className="w-full h-full flex items-center justify-center text-[var(--accent)] bg-[var(--accent-subtle)]">
+            <Package className="w-8 h-8" />
           </div>
         )}
       </div>
       
-      <div className="flex-grow flex flex-col justify-between">
-        <div className="flex justify-between items-start">
+      {/* Details & Controls */}
+      <div className="flex-grow flex flex-col justify-between space-y-3">
+        <div className="flex justify-between items-start gap-2">
           <div>
-            <span className="text-[10px] font-bold text-accent uppercase tracking-wider">{categoryName}</span>
-            <h4 className="font-extrabold text-text text-base leading-snug">{productName}</h4>
-            {(item.start_date || item.startDate) && (
-              <div className="text-xs text-text-muted mt-1 font-medium">
-                Rental Period: {item.start_date || item.startDate} to {item.end_date || item.endDate}
+            <span className="text-[10px] font-extrabold text-[var(--accent)] uppercase tracking-wider">{categoryName}</span>
+            <h4 className="font-extrabold text-[var(--text)] text-base leading-snug">{productName}</h4>
+            {startDate && endDate && (
+              <div className="text-xs text-[var(--text-muted)] mt-1 font-medium">
+                Rental Period: <span className="font-bold text-[var(--text-secondary)]">{startDate}</span> to <span className="font-bold text-[var(--text-secondary)]">{endDate}</span> ({daysCount} day{daysCount > 1 ? 's' : ''})
               </div>
             )}
           </div>
+          
           <button 
             onClick={() => onRemove && onRemove(item.id)}
-            className="text-text-muted hover:text-danger p-1.5 rounded-xl hover:bg-danger/10 transition-colors"
+            className="text-[var(--text-muted)] hover:text-red-500 p-1.5 rounded-xl hover:bg-red-500/10 transition-colors cursor-pointer"
             title="Remove item"
           >
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
         
-        <div className="flex items-end justify-between mt-3">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Daily Rate</span>
-            <PriceDisplay amount={priceAmount} className="font-black text-text text-base" />
-          </div>
-          {depositAmount > 0 && (
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Security Deposit (Refundable)</span>
-              <PriceDisplay amount={depositAmount} className="font-bold text-text-secondary text-sm" />
+        {/* Quantity Controls & Financial Itemization */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-[var(--border)]/60">
+          
+          {/* Quantity Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-extrabold text-[var(--text-secondary)] mr-1">Qty:</span>
+            <div className="flex items-center gap-2 bg-[var(--bg-subtle)] border border-[var(--border)] rounded-xl p-1 shadow-xs">
+              <button 
+                type="button"
+                onClick={handleDecrease}
+                className="w-7 h-7 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-xs flex items-center justify-center transition-colors cursor-pointer"
+                title={qty === 1 ? "Remove item" : "Decrease quantity"}
+              >
+                -
+              </button>
+              <span className="text-sm font-black text-[var(--accent)] min-w-[20px] text-center">{qty}</span>
+              <button 
+                type="button"
+                onClick={handleIncrease}
+                className="w-7 h-7 rounded-lg bg-[var(--bg-elevated)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-xs flex items-center justify-center transition-colors cursor-pointer"
+                title="Increase quantity"
+              >
+                +
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* Pricing Breakdown */}
+          <div className="flex items-center gap-6 text-right ml-auto">
+            <div>
+              <span className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider block">Rental Charge</span>
+              <PriceDisplay amount={totalRental} className="font-black text-[var(--text)] text-sm" />
+              {qty > 1 && (
+                <span className="text-[10px] text-[var(--text-muted)] block">₹{unitDailyRate.toLocaleString('en-IN')}/day × {daysCount}d × {qty}</span>
+              )}
+            </div>
+
+            {totalDeposit > 0 && (
+              <div>
+                <span className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider block">Refundable Deposit</span>
+                <PriceDisplay amount={totalDeposit} className="font-extrabold text-emerald-600 dark:text-emerald-400 text-sm" />
+                {qty > 1 && (
+                  <span className="text-[10px] text-[var(--text-muted)] block">₹{unitDeposit.toLocaleString('en-IN')} × {qty}</span>
+                )}
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

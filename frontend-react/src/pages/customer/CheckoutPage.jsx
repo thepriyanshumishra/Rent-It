@@ -80,6 +80,16 @@ const CheckoutPage = () => {
     { label: 'Payment & Escrow' }
   ];
 
+const getDays = (item) => {
+  const s = item.start_date || item.startDate;
+  const e = item.end_date || item.endDate;
+  if (!s || !e) return 3;
+  const start = new Date(s);
+  const end = new Date(e);
+  const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  return diff > 0 ? diff : 1;
+};
+
   const itemsList = cart?.items || [];
   
   let calcRental = 0;
@@ -87,7 +97,8 @@ const CheckoutPage = () => {
 
   itemsList.forEach(item => {
     const qty = item.quantity || 1;
-    calcRental += getItemPrice(item) * qty;
+    const days = getDays(item);
+    calcRental += getItemPrice(item) * days * qty;
     calcDeposit += getItemDeposit(item) * qty;
   });
 

@@ -124,7 +124,7 @@ const ProductDetailPage = () => {
     ? product.images
     : (product.primary_image ? [product.primary_image] : (product.image_url ? [product.image_url] : []));
 
-  const handleAddToCart = () => {
+  const handleAddToCartOnly = () => {
     const sDate = startDate || todayStr;
     const eDate = endDate || defaultEndStr;
     
@@ -136,8 +136,23 @@ const ProductDetailPage = () => {
       deliveryMethod: 'delivery',
       quantity: rentQuantity
     });
-    toast.success(`Added ${rentQuantity} unit(s) to rental cart!`);
-    navigate('/cart');
+    toast.success(`Added ${rentQuantity} unit(s) of ${product.name} to rental cart!`);
+  };
+
+  const handleRentNow = () => {
+    const sDate = startDate || todayStr;
+    const eDate = endDate || defaultEndStr;
+    
+    addToCart({
+      product,
+      startDate: sDate,
+      endDate: eDate,
+      pricing: { price: product.price, period_name: 'Daily Rate' },
+      deliveryMethod: 'delivery',
+      quantity: rentQuantity
+    });
+    toast.success(`Proceeding to instant rental checkout!`);
+    navigate('/checkout');
   };
 
   const handlePreReserveNextSlot = () => {
@@ -384,11 +399,12 @@ const ProductDetailPage = () => {
                 onEndChange={setEndDate}
                 basePrice={product.price}
                 securityDeposit={product.security_deposit}
+                quantity={rentQuantity}
                 isRented={!!rentedInfo}
                 rentedInfo={rentedInfo}
               />
 
-              {/* CTA Action Button */}
+              {/* CTA Action Buttons (Amazon/Flipkart Style: Add to Cart + Rent Now) */}
               {rentedInfo ? (
                 <div className="space-y-2">
                   <Button 
@@ -406,12 +422,25 @@ const ProductDetailPage = () => {
                   </Button>
                 </div>
               ) : (
-                <Button 
-                  onClick={handleAddToCart}
-                  className="w-full justify-center py-3.5 text-base font-extrabold shadow-md rounded-2xl gap-2"
-                >
-                  <ShoppingCart className="w-5 h-5" /> Add to Cart & Reserve
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddToCartOnly}
+                    className="w-full justify-center py-3.5 text-sm font-black rounded-2xl gap-2 border-2 border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent-subtle)]"
+                  >
+                    <ShoppingCart className="w-4 h-4" /> Add to Cart
+                  </Button>
+                  
+                  <Button 
+                    type="button"
+                    variant="primary"
+                    onClick={handleRentNow}
+                    className="w-full justify-center py-3.5 text-sm font-black shadow-lg rounded-2xl gap-2 bg-[var(--accent)] text-white hover:opacity-95"
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Rent Now
+                  </Button>
+                </div>
               )}
 
               {/* Trust Features Grid */}

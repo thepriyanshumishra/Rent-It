@@ -10,7 +10,7 @@ import useCart from '../../hooks/useCart';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { cart, removeItem, loading } = useCart();
+  const { cart, removeItem, updateItem, loading } = useCart();
 
   const isEmpty = !cart?.items || cart.items.length === 0;
 
@@ -37,6 +37,7 @@ const CartPage = () => {
                     key={item.id} 
                     item={item} 
                     onRemove={removeItem} 
+                    onUpdateQuantity={(id, newQty) => updateItem(id, { quantity: newQty })}
                   />
                 ))}
               </div>
