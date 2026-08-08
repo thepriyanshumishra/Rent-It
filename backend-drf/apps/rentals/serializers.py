@@ -41,9 +41,8 @@ class CartSerializer(serializers.ModelSerializer):
         for item in obj.items.all():
             try:
                 prod = Product.objects.get(id=item.product_id)
-                first_pricing = prod.pricings.first()
-                if first_pricing and first_pricing.security_deposit:
-                    total += float(first_pricing.security_deposit) * item.quantity
+                if prod.security_deposit:
+                    total += float(prod.security_deposit) * item.quantity
             except Exception:
                 pass
         return f"{total:.2f}"

@@ -82,22 +82,17 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_superuser or user.role == User.Role.ADMIN:
             return RentalOrder.objects.all().order_by('-created_at')
-        if hasattr(user, 'merchant_profile') and user.merchant_profile:
-            return RentalOrder.objects.filter(merchant=user.merchant_profile).order_by('-created_at')
         return RentalOrder.objects.filter(user=user).order_by('-created_at')
 
     @action(detail=False, methods=['post'], url_path='checkout')
     def checkout(self, request):
         user = request.user if (request.user and request.user.is_authenticated) else None
         if not user:
-            # Fallback to first customer if unauthenticated
             user = User.objects.filter(role=User.Role.CUSTOMER).first() or User.objects.first()
 
         cart = Cart.objects.filter(user=user).first() if user else None
         cart_items = list(cart.items.all()) if cart else []
 
-        payload_items = request.data.get('items', [])
-        
         calc_amount = float(request.data.get('total_amount', 0.0))
         if calc_amount <= 0:
             if cart_items:
@@ -106,13 +101,8 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
                 first_prod = Product.objects.first()
                 calc_amount = float(first_prod.price) if first_prod else 32000.00
 
-        fulfillment_type = request.data.get('fulfillment_type', RentalOrder.FulfillmentType.DOORSTEP)
-        merchant = Merchant.objects.filter(is_active=True).first()
-
         order = RentalOrder.objects.create(
             user=user,
-            merchant=merchant,
-            fulfillment_type=fulfillment_type,
             delivery_address=request.data.get('delivery_address', 'Doorstep Delivery'),
             delivery_pincode=request.data.get('delivery_pincode', '110001'),
             total_amount=calc_amount,
@@ -144,24 +134,12 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
 
         return Response(RentalOrderSerializer(order).data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'], url_path='verify-pickup')
-    def verify_pickup(self, request, pk=None):
-        order = self.get_object()
-        code = request.data.get('pickup_code')
-        if order.pickup_code and order.pickup_code == str(code).strip():
-            order.status = 'ACTIVE'
-            order.save()
-            return Response({'detail': 'Pickup verified & rental status activated!', 'order': RentalOrderSerializer(order).data})
-        return Response({'detail': 'Invalid pickup code.'}, status=status.HTTP_400_BAD_REQUEST)
-
     @action(detail=True, methods=['post'], url_path='process-return')
     def process_return(self, request, pk=None):
         order = self.get_object()
-        notes = request.data.get('notes', '')
-        damage_fee = request.data.get('damage_fee', 0)
         order.status = 'RETURNED'
         order.save()
-        return Response({'detail': 'Return processed & deposit settlement logged!', 'order': RentalOrderSerializer(order).data})
+        return Response({'detail': 'Return processed successfully!', 'order': RentalOrderSerializer(order).data})
 
 class RentalOrderItemViewSet(viewsets.ModelViewSet):
     queryset = RentalOrderItem.objects.all()

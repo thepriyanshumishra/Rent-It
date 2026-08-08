@@ -26,6 +26,7 @@ const ProductDetailPage = () => {
 
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(defaultEndStr);
+  const [rentQuantity, setRentQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('overview');
   const [rentedInfo, setRentedInfo] = useState(null);
   const [nextAvailableDate, setNextAvailableDate] = useState(null);
@@ -41,6 +42,8 @@ const ProductDetailPage = () => {
   });
 
   const product = data?.data;
+
+  const maxQuantity = Math.max(1, product?.available_quantity ?? product?.quantity ?? 1);
 
   const rawRelated = Array.isArray(relatedData?.data)
     ? relatedData.data
@@ -131,9 +134,9 @@ const ProductDetailPage = () => {
       endDate: eDate,
       pricing: { price: product.price, period_name: 'Daily Rate' },
       deliveryMethod: 'delivery',
-      quantity: 1
+      quantity: rentQuantity
     });
-    toast.success('Added to rental cart!');
+    toast.success(`Added ${rentQuantity} unit(s) to rental cart!`);
     navigate('/cart');
   };
 
@@ -346,9 +349,30 @@ const ProductDetailPage = () => {
                   <span className="text-[10px] font-extrabold text-[var(--text-muted)] uppercase tracking-wider block">Daily Rental Rate</span>
                   <span className="text-2xl font-black text-[var(--accent)]">₹{Number(product.price).toLocaleString('en-IN')}<span className="text-xs font-bold text-[var(--text-muted)]"> / day</span></span>
                 </div>
-                <div className="text-right">
-                  <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">Refundable Escrow</span>
-                  <span className="text-sm font-extrabold text-[var(--text)]">₹{Number(product.security_deposit || 0).toLocaleString('en-IN')}</span>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)]">
+                <div>
+                  <span className="text-xs font-extrabold text-[var(--text)] block">Rental Quantity</span>
+                  <span className="text-[11px] text-[var(--text-muted)] font-medium">Units ({maxQuantity} in stock)</span>
+                </div>
+                <div className="flex items-center gap-3 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-1 shadow-xs">
+                  <button 
+                    type="button"
+                    onClick={() => setRentQuantity(q => Math.max(1, q - 1))}
+                    className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-sm flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <span className="text-base font-black text-[var(--accent)] min-w-[24px] text-center">{rentQuantity}</span>
+                  <button 
+                    type="button"
+                    onClick={() => setRentQuantity(q => Math.min(maxQuantity, q + 1))}
+                    className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-sm flex items-center justify-center transition-colors cursor-pointer"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
 

@@ -56,10 +56,8 @@ export default function ListingRequestsPage() {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async ({ id, tag, custom, approvedQty, rejectedQty, reason }) => {
+    mutationFn: async ({ id, approvedQty, rejectedQty, reason }) => {
       return api.post(`/listing-requests/${id}/approve/`, {
-        admin_condition_tag: tag,
-        admin_custom_condition: custom,
         approved_quantity: approvedQty,
         rejected_quantity: rejectedQty,
         rejection_reason: reason
@@ -96,8 +94,6 @@ export default function ListingRequestsPage() {
   const handleOpenDetail = (req) => {
     setSelectedReq(req);
     setActivePhotoIdx(0);
-    setConditionTag(req.admin_condition_tag || 'Good');
-    setCustomCondition(req.admin_custom_condition || '');
     const totalQty = req.quantity || 1;
     const isAlreadyProcessed = req.status === 'APPROVED' || req.status === 'PARTIALLY_APPROVED' || req.status === 'REJECTED';
     const initialApproved = isAlreadyProcessed ? (req.approved_quantity ?? totalQty) : totalQty;
@@ -220,9 +216,6 @@ export default function ListingRequestsPage() {
                       {req.status === 'APPROVED' && (
                         <div className="space-y-0.5">
                           <span className="badge badge-success font-bold">Approved & Live ({req.approved_quantity || 1})</span>
-                          <span className="text-[10px] text-[var(--accent)] font-bold block uppercase tracking-wider">
-                            Tag: {req.admin_custom_condition || req.admin_condition_tag || 'Good'}
-                          </span>
                         </div>
                       )}
                       {req.status === 'PARTIALLY_APPROVED' && (

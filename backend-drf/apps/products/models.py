@@ -31,7 +31,6 @@ class Product(models.Model):
     short_description = models.CharField(max_length=300, blank=True)
     description = models.TextField(blank=True)
     included_items = models.TextField(blank=True)
-    condition_tag = models.CharField(max_length=100, default='Good', blank=True)
     quantity = models.PositiveIntegerField(default=1)
     available_quantity = models.PositiveIntegerField(default=1)
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
@@ -60,14 +59,7 @@ class RenterListingRequest(models.Model):
         PENDING_VERIFICATION = 'PENDING_VERIFICATION', 'Pending Verification'
         INSPECTION_SCHEDULED = 'INSPECTION_SCHEDULED', 'Inspection Scheduled at HQ'
         APPROVED = 'APPROVED', 'Approved & Listed'
-        PARTIALLY_APPROVED = 'PARTIALLY_APPROVED', 'Partially Approved'
         REJECTED = 'REJECTED', 'Rejected'
-
-    class ConditionTag(models.TextChoices):
-        GOOD = 'Good', 'Good'
-        SUPERB = 'Superb', 'Superb'
-        DOES_NOT_APPLY = 'Does Not Apply', "Doesn't Apply"
-        CUSTOM = 'Custom', 'Custom'
 
     renter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='listing_requests')
     product_name = models.CharField(max_length=255)
@@ -81,9 +73,6 @@ class RenterListingRequest(models.Model):
     image_url = models.URLField(max_length=500, blank=True, null=True)
     images_data = models.JSONField(default=list, blank=True)
     included_items = models.TextField(blank=True, null=True)
-    condition_notes = models.TextField(blank=True)
-    admin_condition_tag = models.CharField(max_length=50, choices=ConditionTag.choices, default=ConditionTag.GOOD)
-    admin_custom_condition = models.CharField(max_length=255, blank=True, null=True)
     status = models.CharField(max_length=30, choices=Status.choices, default=Status.PENDING_VERIFICATION)
     rejection_reason = models.TextField(blank=True, null=True)
     approved_product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True, related_name='origin_request')

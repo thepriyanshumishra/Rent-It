@@ -35,20 +35,20 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Center: Main Navigation Pills (Exact Horizontal Center) */}
-        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-1.5 bg-[var(--bg-elevated)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xs">
-          <Link 
-            to="/explore" 
-            className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
-              location.pathname === '/explore' 
-                ? 'bg-[var(--accent)] text-white shadow-sm' 
-                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
-            }`}
-          >
-            <Compass className="w-4 h-4" /> Explore
-          </Link>
+        {/* Center: Main Navigation Pills (Only when authenticated so logged out users don't see a single lonely pill) */}
+        {isAuthenticated && (
+          <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-1.5 bg-[var(--bg-elevated)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xs">
+            <Link 
+              to="/explore" 
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
+                location.pathname === '/explore' 
+                  ? 'bg-[var(--accent)] text-white shadow-sm' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
+              }`}
+            >
+              <Compass className="w-4 h-4" /> Explore
+            </Link>
 
-          {isAuthenticated && (
             <Link 
               to="/my-rentals"
               className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
@@ -59,21 +59,21 @@ export default function Navbar() {
             >
               <Package className="w-4 h-4" /> My Rentals
             </Link>
-          )}
 
-          {user?.role === 'RENTER' && (
-            <Link 
-              to="/renter/dashboard"
-              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
-                location.pathname.startsWith('/renter') 
-                  ? 'bg-[var(--accent)] text-white shadow-sm' 
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
-              }`}
-            >
-              <Grid className="w-4 h-4" /> Renter Portal
-            </Link>
-          )}
-        </div>
+            {user?.role === 'RENTER' && (
+              <Link 
+                to="/renter/dashboard"
+                className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
+                  location.pathname.startsWith('/renter') 
+                    ? 'bg-[var(--accent)] text-white shadow-sm' 
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
+                }`}
+              >
+                <Grid className="w-4 h-4" /> Renter Portal
+              </Link>
+            )}
+          </div>
+        )}
 
         {/* Right Action Icons & Controls */}
         <div className="flex items-center gap-3">

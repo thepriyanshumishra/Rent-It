@@ -112,8 +112,8 @@ const OrderConfirmationPage = () => {
               <span className="font-bold text-text text-right">{startDate} to {endDate}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-text-muted font-medium">Fulfillment Choice</span>
-              <span className="font-bold text-text capitalize text-right">{order.delivery_method || 'Doorstep Delivery'}</span>
+              <span className="text-text-muted font-medium">Delivery Mode</span>
+              <span className="font-bold text-text capitalize text-right">Express Doorstep Delivery</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-text-muted font-medium">Return Deadline</span>

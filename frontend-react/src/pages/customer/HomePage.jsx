@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Package, Laptop, Sofa, Car, Camera, Music, Shield, Eye, Lock, RotateCcw, Search, Calendar, ChevronRight } from 'lucide-react';
+import { Package, Laptop, Sofa, Car, Camera, Music, Shield, Eye, Lock, RotateCcw, Search, Calendar, ChevronRight, Compass } from 'lucide-react';
 import PageTransition from '../../components/shared/PageTransition';
 import ScrollReveal from '../../components/shared/ScrollReveal';
 import Button from '../../components/ui/Button';
@@ -117,7 +117,6 @@ const HomePage = () => {
                 className="bg-transparent text-sm text-[var(--text)] font-semibold outline-none border-0 p-0 shadow-none focus:ring-0 cursor-pointer"
               />
             </div>
-
             <button
               type="submit"
               className="btn-primary h-full w-full rounded-xl font-bold flex items-center justify-center gap-2 py-3 text-sm"
@@ -125,6 +124,22 @@ const HomePage = () => {
               <Search className="w-4 h-4" /> Find Available
             </button>
           </motion.form>
+
+          {/* Explicit Explore Gear CTA Button */}
+          <motion.div 
+            className="mb-10"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+          >
+            <Button 
+              size="lg" 
+              className="rounded-2xl px-8 py-3.5 font-black text-sm shadow-xl flex items-center gap-2"
+              onClick={() => navigate('/explore')}
+            >
+              <Compass className="w-5 h-5" /> Explore All Equipment <ChevronRight className="w-4 h-4" />
+            </Button>
+          </motion.div>
 
           <motion.div 
             className="flex flex-wrap justify-center gap-6 md:gap-12 text-xs sm:text-sm text-text-secondary font-semibold"
