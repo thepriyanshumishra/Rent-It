@@ -1,53 +1,47 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Bell, Menu, X, User, Sun, Moon, Compass, Package, Building2, LayoutDashboard, LogOut } from 'lucide-react';
-import useAuth from '../../hooks/useAuth';
-import useCart from '../../hooks/useCart';
-import useNotifications from '../../hooks/useNotifications';
+import React, { useContext } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { AuthContext } from '../../context/AuthContext';
+import { CartContext } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
+import { 
+  ShoppingBag, User, LogOut, Sun, Moon, Sparkles, 
+  ShieldCheck, Package, ChevronDown, PlusCircle, Compass, Grid
+} from 'lucide-react';
+import Button from '../ui/Button';
 
-const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, isAdmin, isMerchant, logout } = useAuth();
-  const { totalItems } = useCart();
-  const { unreadCount } = useNotifications();
-  const { theme, toggleTheme } = useContext(ThemeContext);
+export default function Navbar() {
+  const { user, isAuthenticated, logout } = useContext(AuthContext);
+  const { cartCount } = useContext(CartContext) || { cartCount: 0 };
+  const { theme, toggleTheme } = useContext(ThemeContext) || { theme: 'light', toggleTheme: () => {} };
+  const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 15);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location]);
+  const isRenter = user?.role === 'RENTER';
+  const isAdmin = user?.role === 'ADMIN' || user?.is_staff || user?.is_superuser;
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'h-16 glass shadow-sm' 
-          : 'h-20 bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl h-full mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--border)] transition-colors duration-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
         
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 z-50 group">
-          <div className="w-9 h-9 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
-            R
+        {/* Left: Brand Logo */}
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[var(--accent)] to-purple-600 flex items-center justify-center text-white shadow-md shadow-[var(--accent)]/20 group-hover:scale-105 transition-transform">
+            <Sparkles className="w-5.5 h-5.5" />
           </div>
-          <span className="font-black text-xl tracking-tight text-[var(--text)]">RentIt</span>
+          <div className="flex flex-col">
+            <span className="font-black text-xl tracking-tight text-[var(--text)] leading-none">
+              Rent<span className="text-[var(--accent)]">It</span>
+            </span>
+            <span className="text-[10px] font-extrabold text-[var(--text-muted)] tracking-widest uppercase mt-0.5">
+              Enterprise Fleet
+            </span>
+          </div>
         </Link>
 
-        {/* Desktop Nav Pills */}
-        <nav className="hidden md:flex items-center gap-2 bg-[var(--bg-elevated)]/80 border border-[var(--border)] p-1.5 rounded-2xl shadow-xs">
+        {/* Center: Main Navigation */}
+        <div className="hidden md:flex items-center gap-1.5 bg-[var(--bg-elevated)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xs">
           <Link 
-            to="/explore"
+            to="/explore" 
             className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
               location.pathname === '/explore' 
                 ? 'bg-[var(--accent)] text-white shadow-sm' 
@@ -57,17 +51,6 @@ const Navbar = () => {
             <Compass className="w-4 h-4" /> Explore
           </Link>
 
-          <Link 
-            to="/businesses"
-            className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
-              location.pathname === '/businesses' 
-                ? 'bg-[var(--accent)] text-white shadow-sm' 
-                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
-            }`}
-          >
-            <Building2 className="w-4 h-4" /> Businesses
-          </Link>
-          
           {isAuthenticated && (
             <Link 
               to="/my-rentals"
@@ -84,135 +67,101 @@ const Navbar = () => {
           {user?.role === 'RENTER' && (
             <Link 
               to="/renter/dashboard"
-              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent-subtle-hover)]`}
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
+                location.pathname.startsWith('/renter') 
+                  ? 'bg-[var(--accent)] text-white shadow-sm' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
+              }`}
             >
-              <Sparkles className="w-4 h-4" /> Renter Portal (60%)
+              <Grid className="w-4 h-4" /> Renter Portal
             </Link>
-          )}
-
-          {(isAdmin || isMerchant) && (
-            <Link 
-              to="/admin/dashboard"
-              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent-subtle-hover)]`}
-            >
-              <LayoutDashboard className="w-4 h-4" /> HQ Admin Portal
-            </Link>
-          )}
-        </nav>
-
-        {/* Right Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)] transition-all"
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          >
-            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-
-          {/* Cart */}
-          <Link 
-            to="/cart"
-            className="relative p-2.5 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)] transition-all"
-            title="Shopping Cart"
-          >
-            <ShoppingCart className="w-4 h-4" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--accent)] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[var(--bg)]">
-                {totalItems}
-              </span>
-            )}
-          </Link>
-
-          {/* User Auth Controls */}
-          {isAuthenticated ? (
-            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border)]">
-              <Link 
-                to="/account"
-                className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-[var(--bg-subtle)] hover:bg-[var(--border)] text-sm font-bold text-[var(--text)] transition-all"
-              >
-                <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white text-xs flex items-center justify-center">
-                  {(user?.first_name || user?.email || 'U')[0].toUpperCase()}
-                </div>
-                <span>{user?.first_name || user?.email?.split('@')[0]}</span>
-              </Link>
-              <button
-                onClick={logout}
-                className="p-2.5 rounded-2xl text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 border border-[var(--border)] transition-all"
-                title="Logout"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border)]">
-              <Link
-                to="/login"
-                className="px-4 py-2 text-sm font-extrabold text-[var(--text)] hover:text-[var(--accent)] transition-all"
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/register"
-                className="px-4 py-2 rounded-2xl text-sm font-extrabold bg-[var(--accent)] text-white hover:opacity-90 shadow-md transition-all"
-              >
-                Get Started
-              </Link>
-            </div>
           )}
         </div>
 
-        {/* Mobile Hamburger */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2.5 rounded-2xl text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)]"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Drawer */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden glass border-b border-[var(--border)] px-4 py-4 space-y-3"
+        {/* Right Action Icons & Controls */}
+        <div className="flex items-center gap-3">
+          
+          {/* Theme Toggle */}
+          <button 
+            onClick={toggleTheme}
+            className="p-2.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
+            title="Toggle theme"
           >
-            <Link to="/explore" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
-              <Compass className="w-5 h-5 text-[var(--accent)]" /> Explore Products
-            </Link>
-            <Link to="/businesses" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
-              <Building2 className="w-5 h-5 text-[var(--accent)]" /> Business Bulk Orders
-            </Link>
-            {isAuthenticated && (
-              <Link to="/my-rentals" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
-                <Package className="w-5 h-5 text-[var(--accent)]" /> My Rentals
-              </Link>
-            )}
-            {isAdmin && (
-              <Link to="/admin" className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold">
-                <LayoutDashboard className="w-5 h-5" /> Admin Operations Portal
-              </Link>
-            )}
-            <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between">
-              <button onClick={toggleTheme} className="flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)]">
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[var(--text)]" />}
-                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-              </button>
-              {isAuthenticated ? (
-                <button onClick={logout} className="text-sm font-bold text-red-500">Sign Out</button>
-              ) : (
-                <Link to="/login" className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-bold">Sign In</Link>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
-  );
-};
+            {theme === 'dark' ? <Sun className="w-4.5 h-4.5 text-amber-400" /> : <Moon className="w-4.5 h-4.5" />}
+          </button>
 
-export default Navbar;
+          {/* Cart Icon (Customers & Unauthenticated) */}
+          {(!user || user.role === 'CUSTOMER') && (
+            <Link 
+              to="/cart" 
+              className="relative p-2.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] transition-all cursor-pointer"
+            >
+              <ShoppingBag className="w-4.5 h-4.5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-[var(--accent)] text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-[var(--bg)] shadow-xs animate-scale-in">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          )}
+
+          {/* Become a Renter Button */}
+          {!isAuthenticated ? (
+            <Link to="/become-a-renter" className="hidden lg:block">
+              <Button variant="outline" size="sm" className="rounded-2xl font-bold text-xs">
+                List Equipment & Earn
+              </Button>
+            </Link>
+          ) : user?.role === 'CUSTOMER' ? (
+            <Link to="/become-a-renter" className="hidden lg:block">
+              <Button variant="outline" size="sm" className="rounded-2xl font-bold text-xs flex items-center gap-1.5">
+                <PlusCircle className="w-4 h-4 text-[var(--accent)]" /> List Equipment
+              </Button>
+            </Link>
+          ) : null}
+
+          {/* User Auth Buttons */}
+          {!isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="rounded-2xl font-extrabold text-xs">
+                  Sign In
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="sm" className="rounded-2xl font-extrabold text-xs shadow-md">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 pl-1 border-l border-[var(--border)]">
+              <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)]">
+                <div className="w-7 h-7 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center font-black text-xs">
+                  {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                </div>
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-bold text-[var(--text)] leading-tight max-w-[100px] truncate">
+                    {user?.full_name || user?.email?.split('@')[0]}
+                  </span>
+                  <span className="text-[9px] font-extrabold text-[var(--accent)] uppercase tracking-wider">
+                    {user?.role || 'CUSTOMER'}
+                  </span>
+                </div>
+              </div>
+
+              <button 
+                onClick={logout}
+                className="p-2.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-all cursor-pointer"
+                title="Sign out"
+              >
+                <LogOut className="w-4.5 h-4.5" />
+              </button>
+            </div>
+          )}
+
+        </div>
+      </div>
+    </nav>
+  );
+}

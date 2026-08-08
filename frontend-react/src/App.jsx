@@ -14,7 +14,6 @@ import PageTransition from './components/shared/PageTransition';
 const HomePage = React.lazy(() => import('./pages/customer/HomePage'));
 const ExplorePage = React.lazy(() => import('./pages/customer/ExplorePage'));
 const ProductDetailPage = React.lazy(() => import('./pages/customer/ProductDetailPage'));
-const BusinessPage = React.lazy(() => import('./pages/customer/BusinessPage'));
 const BecomeRenterPage = React.lazy(() => import('./pages/customer/BecomeRenterPage'));
 const CartPage = React.lazy(() => import('./pages/customer/CartPage'));
 const CheckoutPage = React.lazy(() => import('./pages/customer/CheckoutPage'));
@@ -36,18 +35,10 @@ const MyListingsPage = React.lazy(() => import('./pages/renter/MyListingsPage'))
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
 const RentalsPage = React.lazy(() => import('./pages/admin/RentalsPage'));
-const BusinessOrdersPage = React.lazy(() => import('./pages/admin/BusinessOrdersPage'));
 const ListingRequestsPage = React.lazy(() => import('./pages/admin/ListingRequestsPage'));
 const AdminRentalDetailPage = React.lazy(() => import('./pages/admin/AdminRentalDetailPage'));
-const ProductsPage = React.lazy(() => import('./pages/admin/ProductsPage'));
 const ProductFormPage = React.lazy(() => import('./pages/admin/ProductFormPage'));
 const InventoryPage = React.lazy(() => import('./pages/admin/InventoryPage'));
-const CustomersPage = React.lazy(() => import('./pages/admin/CustomersPage'));
-const CustomerDetailPage = React.lazy(() => import('./pages/admin/CustomerDetailPage'));
-const QuotationsPage = React.lazy(() => import('./pages/admin/QuotationsPage'));
-const QuotationFormPage = React.lazy(() => import('./pages/admin/QuotationFormPage'));
-const FinancePage = React.lazy(() => import('./pages/admin/FinancePage'));
-const ReportsPage = React.lazy(() => import('./pages/admin/ReportsPage'));
 const SettingsPage = React.lazy(() => import('./pages/admin/SettingsPage'));
 const NotFoundPage = React.lazy(() => import('./pages/customer/NotFoundPage'));
 
@@ -88,7 +79,6 @@ const CustomerLayout = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/businesses" element={<BusinessPage />} />
               <Route path="/become-a-renter" element={<BecomeRenterPage />} />
               <Route path="/product/:slug" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
@@ -160,23 +150,13 @@ function App() {
                   <Route path="listing-requests" element={<ListingRequestsPage />} />
                   <Route path="rentals" element={<RentalsPage />} />
                   <Route path="rentals/:id" element={<AdminRentalDetailPage />} />
-                  <Route path="business-orders" element={<BusinessOrdersPage />} />
-                  <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductFormPage />} />
                   <Route path="products/:id/edit" element={<ProductFormPage />} />
                   <Route path="inventory" element={<InventoryPage />} />
-                  <Route path="customers" element={<CustomersPage />} />
-                  <Route path="customers/:id" element={<CustomerDetailPage />} />
-                  <Route path="quotations" element={<QuotationsPage />} />
-                  <Route path="quotations/new" element={<QuotationFormPage />} />
-                  <Route path="quotations/:id" element={<QuotationFormPage />} />
-                  <Route path="finance" element={<FinancePage />} />
-                  <Route path="reports" element={<ReportsPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                 </Route>
 
-                {/* Customer Routes — CUSTOMER or unauthenticated only.
-                    ADMIN and RENTER are bounced away inside CustomerLayout. */}
+                {/* Customer Routes — CUSTOMER or unauthenticated only */}
                 <Route path="/*" element={<CustomerLayout />} />
               </Routes>
             </CartProvider>

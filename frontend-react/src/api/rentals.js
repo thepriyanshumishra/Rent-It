@@ -14,3 +14,6 @@ export const cancelOrder = (id) => api.post(`/rentals/orders/${id}/cancel/`);
 export const getMerchants = () => api.get('/accounts/merchants/');
 export const verifyPickup = (id, code) => api.post(`/rentals/orders/${id}/verify-pickup/`, { pickup_code: code });
 export const processReturn = (id, data) => api.post(`/rentals/orders/${id}/process-return/`, data);
+
+export const getMyRentals = () => api.get('/rentals/orders/');
+export const getOrderById = (id) => api.get(`/rentals/orders/${id}/`);

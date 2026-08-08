@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import InventoryTable from '../../components/admin/InventoryTable';
 import EmptyState from '../../components/ui/EmptyState';
-import { Search, Box } from 'lucide-react';
+import { Search, Box, Plus } from 'lucide-react';
 import api from '../../api/axios';
 
 export default function InventoryPage() {
@@ -51,6 +52,8 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-6 flex flex-col h-full">
+      
+      {/* Header with Top-Right + Add Product Button */}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">HQ Equipment Inventory</h2>
@@ -58,6 +61,12 @@ export default function InventoryPage() {
             Monitor real-time fleet stock, renter equipment listings, and available units.
           </p>
         </div>
+        <Link 
+          to="/admin/products/new"
+          className="px-4 py-2.5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all shadow-sm shrink-0"
+        >
+          <Plus size={16} /> Add Product
+        </Link>
       </div>
 
       {/* Real Summary Metrics Bar */}

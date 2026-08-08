@@ -2,9 +2,8 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  LayoutDashboard, FileText, Package, Archive, Users, Building2,
-  DollarSign, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
-  QrCode, Truck, RotateCcw, ShieldCheck, Sparkles
+  LayoutDashboard, Archive, LogOut, ChevronLeft, ChevronRight,
+  QrCode, ShieldCheck, Sparkles
 } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
@@ -12,12 +11,7 @@ const navItems = [
   { path: '/admin/dashboard', icon: LayoutDashboard, label: 'HQ Dashboard' },
   { path: '/admin/listing-requests', icon: Sparkles, label: 'Renter Listing Requests' },
   { path: '/admin/rentals', icon: QrCode, label: 'Pickups & Orders' },
-  { path: '/admin/business-orders', icon: Building2, label: 'B2B Inquiries' },
-  { path: '/admin/products', icon: Package, label: 'Products & Fleet' },
   { path: '/admin/inventory', icon: Archive, label: 'HQ Inventory' },
-  { path: '/admin/customers', icon: Users, label: 'Customers' },
-  { path: '/admin/finance', icon: DollarSign, label: 'Finances & Deposits' },
-  { path: '/admin/reports', icon: BarChart2, label: 'Analytics' },
 ];
 
 export default function AdminSidebar({ collapsed, onToggle }) {

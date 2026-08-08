@@ -33,9 +33,6 @@ urlpatterns = [
     # Pickups, Returns, Inspections
     path('api/', include('apps.pickups.urls')),
 
-    # Quotations
-    path('api/quotations/', include('apps.quotations.urls')),
-
     # Invoices
     path('api/invoices/', include('apps.invoices.urls')),
 
