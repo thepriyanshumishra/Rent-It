@@ -346,3 +346,16 @@ class AdminDashboardView(APIView):
                 'recentRentals': RentalSerializer(recent, many=True).data
             }
         })
+
+class RequestReturnView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            rental = Rental.objects.get(pk=pk)
+            rental.notes = (rental.notes or '') + f"\n[Return Requested]: {request.data.get('notes', '')}"
+            rental.save()
+            return Response({'success': True, 'data': RentalSerializer(rental).data})
+        except Rental.DoesNotExist:
+            return Response({'success': False, 'error': {'message': 'Rental not found'}}, status=status.HTTP_404_NOT_FOUND)
+
