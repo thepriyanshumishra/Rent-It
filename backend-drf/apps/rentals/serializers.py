@@ -75,10 +75,13 @@ class RentalOrderSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_customer_name(self, obj):
-        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.username
+        if not obj.user:
+            return "Customer"
+        name = f"{obj.user.first_name} {obj.user.last_name}".strip()
+        return name if name else obj.user.username
 
     def get_customer_email(self, obj):
-        return obj.user.email
+        return obj.user.email if obj.user else ""
 
     def get_customer_phone(self, obj):
-        return obj.user.phone_number or ''
+        return (obj.user.phone_number if obj.user else "") or ''
