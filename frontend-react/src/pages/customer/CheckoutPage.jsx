@@ -228,6 +228,9 @@ const getDays = (item) => {
                       const itemPrice = getItemPrice(item);
                       const itemDeposit = getItemDeposit(item);
                       const qty = item.quantity || 1;
+                      const daysCount = getDays(item);
+                      const sDate = item.start_date || item.startDate || new Date().toISOString().split('T')[0];
+                      const eDate = item.end_date || item.endDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
 
                       return (
                         <div key={item.id} className="pt-4 first:pt-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
@@ -244,11 +247,13 @@ const getDays = (item) => {
                             <div className="space-y-0.5">
                               <span className="text-[10px] font-extrabold text-[var(--accent)] uppercase tracking-wider block">{categoryName}</span>
                               <h4 className="font-extrabold text-[var(--text)] text-sm">{productName} {qty > 1 && `(x${qty})`}</h4>
-                              {(item.start_date || item.startDate) && (
-                                <p className="text-xs text-[var(--text-muted)] font-medium">
-                                  Dates: {item.start_date || item.startDate} to {item.end_date || item.endDate}
-                                </p>
-                              )}
+                              <div className="text-xs text-[var(--text-muted)] font-medium mt-1 flex flex-wrap items-center gap-2">
+                                <span className="px-2 py-0.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] font-extrabold text-[11px]">
+                                  {daysCount} Day{daysCount > 1 ? 's' : ''} Rental
+                                </span>
+                                <span className="text-[var(--text-muted)]">•</span>
+                                <span className="text-[var(--text-secondary)]">{sDate} to {eDate}</span>
+                              </div>
                             </div>
                           </div>
 
@@ -454,7 +459,14 @@ const getDays = (item) => {
               {/* Financial Itemization */}
               <div className="space-y-3 text-xs text-[var(--text-secondary)] font-medium">
                 <div className="flex justify-between items-center">
-                  <span className="text-[var(--text-muted)]">Rental Charge Subtotal</span>
+                  <span className="text-[var(--text-muted)] flex items-center gap-1.5">
+                    Rental Charge Subtotal 
+                    {itemsList.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[var(--accent-subtle)] text-[var(--accent)]">
+                        {getDays(itemsList[0])} Day{getDays(itemsList[0]) > 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </span>
                   <span className="font-extrabold text-[var(--text)]">₹{calcRental.toLocaleString('en-IN')}</span>
                 </div>
 
