@@ -7,6 +7,7 @@ import PageTransition from '../../components/shared/PageTransition';
 import Button from '../../components/ui/Button';
 import PriceDisplay from '../../components/ui/PriceDisplay';
 import Skeleton from '../../components/ui/Skeleton';
+import { toast } from '../../components/ui/Toast';
 import * as rentalsApi from '../../api/rentals';
 import * as invoicesApi from '../../api/invoices';
 
@@ -64,6 +65,43 @@ const OrderConfirmationPage = () => {
   const rentalFee = parseFloat(order.rental_amount || 1800);
   const depositFee = parseFloat(order.deposit_amount || 5000);
   const totalCharged = parseFloat(order.total_price || rentalFee + depositFee);
+
+  const handleDownloadInvoice = () => {
+    const invoiceContent = `
+====================================================
+               RENTIT TAX INVOICE
+====================================================
+Invoice Ref  : ${order.order_number || orderId}
+Date         : ${new Date().toLocaleDateString('en-IN')}
+Status       : ACTIVE / CONFIRMED
+----------------------------------------------------
+Customer Name: ${order.user?.name || order.address?.name || 'Valued Customer'}
+Delivery Addr: ${typeof order.address === 'string' ? order.address : `${order.address?.line1 || 'B-104 Tech Park'}, ${order.address?.city || 'Noida'}`}
+----------------------------------------------------
+Item Rented  : ${productName}
+Rental Period: ${startDate} to ${endDate}
+Fulfillment  : Express Doorstep Delivery
+----------------------------------------------------
+Rental Fee   : ₹${rentalFee.toLocaleString('en-IN')}
+Escrow Deposit: ₹${depositFee.toLocaleString('en-IN')}
+----------------------------------------------------
+TOTAL PAID   : ₹${totalCharged.toLocaleString('en-IN')}
+====================================================
+Thank you for renting with RentIt Platform!
+    `.trim();
+
+    const blob = new Blob([invoiceContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `RentIt_Invoice_${order.order_number || orderId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Tax Invoice downloaded successfully!');
+  };
 
   return (
     <PageTransition>
