@@ -85,13 +85,8 @@ const CartSummary = ({ cart, loading, onCheckout }) => {
       
       <div className="space-y-4 mb-6 text-sm">
         <div className="flex justify-between items-center">
-          <span className="text-text-muted font-medium flex items-center gap-1.5">
-            Rental Subtotal 
-            {items.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-[var(--accent-subtle)] text-[var(--accent)]">
-                {getDays(items[0])} Day{getDays(items[0]) > 1 ? 's' : ''}
-              </span>
-            )}
+          <span className="text-text-muted font-medium">
+            Rental Subtotal
           </span>
           <PriceDisplay amount={calcRental} className="text-text font-bold text-base" />
         </div>
