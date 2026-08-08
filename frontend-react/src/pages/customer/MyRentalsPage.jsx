@@ -10,10 +10,17 @@ import * as rentalsApi from '../../api/rentals';
 
 const MyRentalsPage = () => {
   const [activeTab, setActiveTab] = useState('active');
+  const [localOrders, setLocalOrders] = useState([]);
 
-  // Purge any old local storage mock order cache on page load for clean state
   useEffect(() => {
-    localStorage.removeItem('rentos_placed_orders');
+    try {
+      const stored = localStorage.getItem('rentos_placed_orders');
+      if (stored) {
+        setLocalOrders(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.warn('LocalStorage read error', e);
+    }
   }, []);
 
   const { data, isLoading } = useQuery({
@@ -26,14 +33,24 @@ const MyRentalsPage = () => {
     ? data.data 
     : (Array.isArray(data) ? data : (data?.results || []));
 
-  const rentals = apiRentals.map(r => {
+  // Merge API rentals and local storage rentals uniquely
+  const allRaw = [...apiRentals, ...localOrders];
+  const uniqueMap = new Map();
+  allRaw.forEach(item => {
+    const key = String(item.id || item.order_number);
+    if (!uniqueMap.has(key)) {
+      uniqueMap.set(key, item);
+    }
+  });
+
+  const rentals = Array.from(uniqueMap.values()).map(r => {
     return {
       ...r,
       order_number: r.order_number || `RNT-${r.id}`,
       product: r.product || r.items?.[0]?.product || { name: 'Rental Item' },
       rental_amount: r.total_amount || r.rental_amount || 0,
       deposit_amount: r.deposit_amount || 0,
-      start_date: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+      start_date: r.start_date || (r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
       end_date: r.end_date || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
       status: r.status || 'ACTIVE'
     };

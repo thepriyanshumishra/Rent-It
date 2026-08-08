@@ -92,6 +92,7 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
 
         cart = Cart.objects.filter(user=user).first() if user else None
         cart_items = list(cart.items.all()) if cart else []
+        items_payload = request.data.get('items', [])
 
         calc_amount = float(request.data.get('total_amount', 0.0))
         if calc_amount <= 0:
@@ -109,20 +110,48 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
             status='ACTIVE'
         )
 
+        processed_products = False
+
         if cart_items:
             for item in cart_items:
                 try:
                     prod = Product.objects.get(id=item.product_id)
+                    qty = item.quantity or 1
                     RentalOrderItem.objects.create(
                         order=order,
                         product_id=prod.id,
-                        quantity=item.quantity,
+                        quantity=qty,
                         price=prod.price or 0
                     )
+                    if prod.available_quantity > 0:
+                        prod.available_quantity = max(0, prod.available_quantity - qty)
+                        prod.save()
+                    processed_products = True
                 except Product.DoesNotExist:
                     pass
             cart.items.all().delete()
-        else:
+
+        if not processed_products and items_payload:
+            for item_data in items_payload:
+                prod_id = item_data.get('product_id') or (item_data.get('product', {}).get('id') if isinstance(item_data.get('product'), dict) else None)
+                qty = int(item_data.get('quantity', 1))
+                if prod_id:
+                    try:
+                        prod = Product.objects.get(id=prod_id)
+                        RentalOrderItem.objects.create(
+                            order=order,
+                            product_id=prod.id,
+                            quantity=qty,
+                            price=prod.price or 0
+                        )
+                        if prod.available_quantity > 0:
+                            prod.available_quantity = max(0, prod.available_quantity - qty)
+                            prod.save()
+                        processed_products = True
+                    except Product.DoesNotExist:
+                        pass
+
+        if not processed_products:
             first_prod = Product.objects.first()
             if first_prod:
                 RentalOrderItem.objects.create(
@@ -131,6 +160,9 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
                     quantity=1,
                     price=first_prod.price or 0
                 )
+                if first_prod.available_quantity > 0:
+                    first_prod.available_quantity = max(0, first_prod.available_quantity - 1)
+                    first_prod.save()
 
         return Response(RentalOrderSerializer(order).data, status=status.HTTP_201_CREATED)
 

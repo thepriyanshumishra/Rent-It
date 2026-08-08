@@ -135,11 +135,28 @@ const getDays = (item) => {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    const generatedId = `RNT-${Math.floor(100000 + Math.random() * 900000)}`;
+    let realOrder = null;
+
+    try {
+      const res = await rentalsApi.checkoutCart({
+        delivery_address: `${address.line1}, ${address.line2}, ${address.city}, ${address.state}`,
+        delivery_pincode: address.zip,
+        fulfillment_type: 'DOORSTEP',
+        total_amount: calculatedTotal,
+        items: itemsList
+      });
+      if (res?.data) {
+        realOrder = res.data;
+      }
+    } catch (err) {
+      console.warn('Backend order API skipped/fallback', err);
+    }
+
+    const orderIdToUse = realOrder?.id || realOrder?.order_number || `RNT-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const newOrderObj = {
-      id: generatedId,
-      order_number: generatedId,
+      id: orderIdToUse,
+      order_number: realOrder?.order_number || orderIdToUse,
       status: 'active',
       items: itemsList,
       rental_amount: calcRental,
@@ -156,22 +173,10 @@ const getDays = (item) => {
 
     saveOrderToStorage(newOrderObj);
 
-    try {
-      await rentalsApi.checkoutCart({
-        delivery_address: `${address.line1}, ${address.line2}, ${address.city}, ${address.state}`,
-        delivery_pincode: address.zip,
-        fulfillment_type: 'DOORSTEP',
-        total_amount: calculatedTotal,
-        items: itemsList
-      });
-    } catch (err) {
-      console.warn('Backend order API skipped/fallback', err);
-    }
-
     clearCart();
     toast.success('Rental order reserved successfully!');
     setIsProcessing(false);
-    navigate(`/order-confirmation/${generatedId}`);
+    navigate(`/order-confirmation/${orderIdToUse}`);
   };
 
   return (
