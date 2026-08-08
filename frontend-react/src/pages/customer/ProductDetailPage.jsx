@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
-  Star, ChevronRight, Truck, ShoppingCart, ShieldCheck, Clock, Shield, 
+  ChevronRight, Truck, ShoppingCart, ShieldCheck, Clock, Shield, 
   Lock, Calendar, CheckCircle2, UserCheck, ArrowLeft
 } from 'lucide-react';
 import PageTransition from '../../components/shared/PageTransition';
@@ -19,7 +19,7 @@ import useCart from '../../hooks/useCart';
 const ProductDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   
   const todayStr = new Date().toISOString().split('T')[0];
   const defaultEndStr = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
@@ -43,7 +43,15 @@ const ProductDetailPage = () => {
 
   const product = data?.data;
 
-  const maxQuantity = Math.max(1, product?.available_quantity ?? product?.quantity ?? 1);
+  // How many units of this product are already in cart (across all date entries)
+  const unitsInCart = (cart?.items || []).filter(
+    i => (i.product?.id || i.product_id) === product?.id
+  ).reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+  const totalAvailable = product?.available_quantity ?? product?.quantity ?? 1;
+  // How many more can be added right now
+  const remainingCanAdd = Math.max(0, totalAvailable - unitsInCart);
+  const maxQuantity = Math.max(1, remainingCanAdd);
 
   const rawRelated = Array.isArray(relatedData?.data)
     ? relatedData.data
@@ -347,15 +355,6 @@ const ProductDetailPage = () => {
                   )}
                 </div>
 
-                {/* Rating & Reviews */}
-                <div className="flex items-center gap-3 text-xs font-bold">
-                  <div className="flex items-center gap-1 text-amber-500">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span>{product.rating || '4.9'}</span>
-                  </div>
-                  <span className="text-[var(--text-muted)]">•</span>
-                  <span className="text-[var(--text-secondary)]">{product.review_count || 14} Verified Reviews</span>
-                </div>
 
                 <p className="text-xs text-[var(--text-muted)] font-medium leading-relaxed pt-1">
                   {product.short_description || product.description?.substring(0, 120)}
@@ -375,7 +374,10 @@ const ProductDetailPage = () => {
                 <div>
                   <span className="text-xs font-extrabold text-[var(--text)] block">Rental Quantity</span>
                   <span className="text-[11px] text-[var(--text-muted)] font-medium">
-                    Units ({product?.available_quantity ?? product?.quantity ?? maxQuantity} available)
+                    {remainingCanAdd > 0
+                      ? `${remainingCanAdd} of ${totalAvailable} available (${unitsInCart} in cart)`
+                      : `All ${totalAvailable} units already in cart`
+                    }
                   </span>
                 </div>
                 <div className="flex items-center gap-3 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-1 shadow-xs">
@@ -390,7 +392,9 @@ const ProductDetailPage = () => {
                   <button 
                     type="button"
                     onClick={() => setRentQuantity(q => Math.min(maxQuantity, q + 1))}
-                    className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-sm flex items-center justify-center transition-colors cursor-pointer"
+                    disabled={remainingCanAdd === 0 || rentQuantity >= maxQuantity}
+                    className="w-8 h-8 rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--accent-subtle)] text-[var(--text)] font-black text-sm flex items-center justify-center transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    title={remainingCanAdd === 0 ? 'All available units are in your cart' : ''}
                   >
                     +
                   </button>
@@ -410,7 +414,7 @@ const ProductDetailPage = () => {
                 rentedInfo={rentedInfo}
               />
 
-              {/* CTA Action Buttons (Amazon/Flipkart Style: Add to Cart + Rent Now) */}
+              {/* CTA Action Buttons */}
               {(product?.available_quantity === 0 && rentedInfo) ? (
                 <div className="space-y-2">
                   <Button 
@@ -426,6 +430,18 @@ const ProductDetailPage = () => {
                   >
                     <Calendar className="w-4 h-4 mr-2" /> Pre-Reserve Next Available Slot
                   </Button>
+                </div>
+              ) : remainingCanAdd === 0 ? (
+                <div className="space-y-2">
+                  <Button 
+                    disabled
+                    className="w-full justify-center py-3.5 text-sm font-extrabold rounded-2xl opacity-60 cursor-not-allowed"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" /> All {totalAvailable} Unit(s) Already in Cart
+                  </Button>
+                  <p className="text-center text-[11px] text-[var(--text-muted)] font-medium">
+                    Go to <a href="/cart" className="text-[var(--accent)] font-extrabold hover:underline">your cart</a> to adjust quantities.
+                  </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
