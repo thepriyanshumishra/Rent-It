@@ -35,8 +35,8 @@ CustomerProfile  ListingReq   RentalOrder
 - `role`: CharField (`ADMIN`, `RENTER`, `CUSTOMER`, `STAFF`)
 - `phone_number`: CharField (optional)
 
-### 2. `RenterProfile` (OneToOne -> `User`)
-- `user`: OneToOneField -> `User`
+### 2. `LenderProfile` (OneToOne -> `User`)
+- `user`: OneToOneField -> `User` (`related_name='lender_profile'`)
 - `bank_account_number`: CharField
 - `ifsc_code`: CharField
 - `upi_id`: CharField
@@ -85,8 +85,8 @@ CustomerProfile  ListingReq   RentalOrder
 - `is_featured`, `is_active`: BooleanField
 - `created_at`, `updated_at`: DateTimeField
 
-### 3. `RenterListingRequest`
-- `renter`: ForeignKey -> `User`
+### 3. `LenderListingRequest`
+- `lender`: ForeignKey -> `User` (`related_name='listing_requests'`)
 - `product_name`: CharField
 - `category`: ForeignKey -> `Category`
 - `short_description`: CharField

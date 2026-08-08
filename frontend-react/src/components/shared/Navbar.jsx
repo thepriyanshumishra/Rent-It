@@ -60,16 +60,16 @@ export default function Navbar() {
               <Package className="w-4 h-4" /> My Rentals
             </Link>
 
-            {user?.role === 'RENTER' && (
+            {user?.role === 'LENDER' && (
               <Link 
-                to="/renter/dashboard"
+                to="/lender/dashboard"
                 className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
-                  location.pathname.startsWith('/renter') 
+                  location.pathname.startsWith('/lender') 
                     ? 'bg-[var(--accent)] text-white shadow-sm' 
                     : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
                 }`}
               >
-                <Grid className="w-4 h-4" /> Renter Portal
+                <Grid className="w-4 h-4" /> Lender Portal
               </Link>
             )}
           </div>

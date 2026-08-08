@@ -22,8 +22,8 @@ const LoginPage = () => {
     if (user) {
       if (user.role === 'ADMIN' || user.role === 'admin' || user.is_staff || user.is_superuser) {
         navigate('/admin/dashboard', { replace: true });
-      } else if (user.role === 'RENTER') {
-        navigate('/renter/dashboard', { replace: true });
+      } else if (user.role === 'LENDER') {
+        navigate('/lender/dashboard', { replace: true });
       }
     }
   }, [user, navigate]);
@@ -40,12 +40,12 @@ const LoginPage = () => {
       toast.success(`Signed in as ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
       const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
-      const isUserRenter = loggedInUser.role === 'RENTER' || loggedInUser.role === 'renter';
+      const isUserLender = loggedInUser.role === 'LENDER' || loggedInUser.role === 'lender';
 
       if (isUserAdmin) {
         navigate('/admin/dashboard', { replace: true });
-      } else if (isUserRenter) {
-        navigate('/renter/dashboard', { replace: true });
+      } else if (isUserLender) {
+        navigate('/lender/dashboard', { replace: true });
       } else {
         navigate('/explore', { replace: true });
       }
@@ -71,12 +71,12 @@ const LoginPage = () => {
       toast.success(`Welcome back, ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
       const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
-      const isUserRenter = loggedInUser.role === 'RENTER' || loggedInUser.role === 'renter';
+      const isUserLender = loggedInUser.role === 'LENDER' || loggedInUser.role === 'lender';
 
       if (isUserAdmin) {
         navigate('/admin/dashboard', { replace: true });
-      } else if (isUserRenter) {
-        navigate('/renter/dashboard', { replace: true });
+      } else if (isUserLender) {
+        navigate('/lender/dashboard', { replace: true });
       } else {
         navigate(from !== '/' && from !== '/login' ? from : '/explore', { replace: true });
       }
@@ -137,10 +137,10 @@ const LoginPage = () => {
               <button
                 type="button"
                 disabled={loading}
-                onClick={() => handleQuickDemoLogin('renter', 'Password123!')}
+                onClick={() => handleQuickDemoLogin('lender', 'Password123!')}
                 className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
               >
-                <Sparkles className="w-3 h-3" /> Renter
+                <Sparkles className="w-3 h-3" /> Lender
               </button>
               <button
                 type="button"

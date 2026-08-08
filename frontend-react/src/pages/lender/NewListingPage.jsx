@@ -83,7 +83,7 @@ export default function NewListingPage() {
         specifications: specsObj,
       });
       toast.success('Equipment submitted for HQ quality check!');
-      navigate('/renter/listings');
+      navigate('/lender/dashboard');
     } catch (err) {
       toast.error('Failed to submit listing request. Please check all fields.');
     } finally {
@@ -153,16 +153,18 @@ export default function NewListingPage() {
                 value={formData.daily_price}
                 onChange={handleChange}
                 placeholder="e.g. 2500"
-                className="input-field font-bold"
+                className="input-field"
               />
-              <span className="text-[11px] text-[var(--accent)] font-bold mt-1 block">
-                You receive 60% (₹{formData.daily_price ? (Number(formData.daily_price) * 0.6).toFixed(0) : '0'}/day)
-              </span>
+              {formData.daily_price && (
+                <span className="text-[11px] text-emerald-500 font-extrabold block mt-1">
+                  Your 60% Payout: ₹{(Number(formData.daily_price) * 0.6).toFixed(2)}/day
+                </span>
+              )}
             </div>
 
             <div>
               <label className="block text-xs font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Security Deposit (₹) *
+                Security Deposit (Escrow) *
               </label>
               <input
                 type="number"
@@ -171,44 +173,47 @@ export default function NewListingPage() {
                 required
                 value={formData.security_deposit}
                 onChange={handleChange}
-                placeholder="e.g. 15000"
-                className="input-field font-bold"
+                placeholder="e.g. 10000"
+                className="input-field"
               />
-              <span className="text-[11px] text-[var(--text-muted)] mt-1 block">
-                100% held in escrow for damage protection
-              </span>
             </div>
           </div>
 
-          {/* Quantity + Bill Warning */}
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Quantity *
-                <span className="ml-2 text-[var(--text-muted)] font-normal normal-case">How many units are you listing?</span>
+          {/* Quantity Section */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-extrabold text-[var(--text-secondary)] uppercase tracking-wider">
+                Quantity Available to List *
               </label>
-              <div className="flex items-center gap-3">
+              <span className="text-xs text-[var(--text-muted)] font-medium">
+                Identical units covered by this single bill
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                name="quantity"
+                min="1"
+                max="50"
+                required
+                value={formData.quantity}
+                onChange={handleChange}
+                className="input-field w-32 font-black text-center"
+              />
+
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setFormData(p => ({ ...p, quantity: Math.max(1, (Number(p.quantity) || 1) - 1) }))}
-                  className="w-10 h-10 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text)] text-lg font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center justify-center select-none"
+                  className="btn-outline py-2 px-3 font-bold text-xs rounded-xl"
                 >
-                  −
+                  -
                 </button>
-                <input
-                  type="number"
-                  name="quantity"
-                  min="1"
-                  max="50"
-                  required
-                  value={formData.quantity}
-                  onChange={(e) => setFormData(p => ({ ...p, quantity: Math.max(1, Math.min(50, Number(e.target.value) || 1)) }))}
-                  className="w-20 text-center input-field font-bold text-lg"
-                />
                 <button
                   type="button"
-                  onClick={() => setFormData(p => ({ ...p, quantity: Math.min(50, (Number(p.quantity) || 1) + 1) }))}
-                  className="w-10 h-10 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text)] text-lg font-bold hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors flex items-center justify-center select-none"
+                  onClick={() => setFormData(p => ({ ...p, quantity: (Number(p.quantity) || 1) + 1 }))}
+                  className="btn-outline py-2 px-3 font-bold text-xs rounded-xl"
                 >
                   +
                 </button>
@@ -230,10 +235,7 @@ export default function NewListingPage() {
                   </p>
                   <p className="text-xs text-amber-700/80 dark:text-amber-400/80 font-medium leading-relaxed">
                     You are listing <strong>{formData.quantity} unit{Number(formData.quantity) !== 1 ? 's' : ''}</strong>.
-                    {' '}Make sure <strong>all {Number(formData.quantity) !== 1 ? formData.quantity + ' ' : ''}unit{Number(formData.quantity) !== 1 ? 's are' : ' is'} covered</strong> under the single bill you upload below.
-                    {Number(formData.quantity) > 1
-                      ? ' Do not list items from multiple bills — only list what appears on this one invoice.'
-                      : ' This bill will serve as ownership proof for this item.'}
+                    Make sure <strong>all {Number(formData.quantity) !== 1 ? formData.quantity + ' ' : ''}unit{Number(formData.quantity) !== 1 ? 's are' : ' is'} covered</strong> under the single bill you upload below.
                   </p>
                 </div>
               </div>
@@ -307,7 +309,7 @@ export default function NewListingPage() {
 
             {specifications.length === 0 ? (
               <p className="text-xs text-[var(--text-muted)] italic font-medium">
-                No specifications added. Click "Add Spec" to add key features (e.g. Sensor: Full Frame, Resolution: 4K, Weight: 715g).
+                No specifications added. Click "Add Spec" to add key features.
               </p>
             ) : (
               specifications.map((spec, idx) => (
@@ -349,7 +351,7 @@ export default function NewListingPage() {
                 rows={3}
                 value={formData.included_items}
                 onChange={handleChange}
-                placeholder="e.g. Sony FX3 Body, 24-70mm f/2.8 GM Lens, 2x batteries, dual charger, XLR top handle, carrying case"
+                placeholder="e.g. Sony FX3 Body, 24-70mm lens, 2x batteries"
                 className="input-field resize-none text-xs"
               />
             </div>
@@ -363,7 +365,7 @@ export default function NewListingPage() {
                 rows={3}
                 value={formData.rental_terms}
                 onChange={handleChange}
-                placeholder="e.g. Valid Govt ID required at pickup. Memory cards not included."
+                placeholder="e.g. Valid Govt ID required at pickup."
                 className="input-field resize-none text-xs"
               />
             </div>

@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { Grid, Sun, Moon, LogOut } from 'lucide-react';
 
-export default function RenterLayout() {
+export default function LenderLayout() {
   const { user, logout } = useContext(AuthContext);
   const { theme, toggleTheme } = useContext(ThemeContext) || { theme: 'light', toggleTheme: () => {} };
 
@@ -15,8 +15,8 @@ export default function RenterLayout() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--border)] transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
           
-          {/* Left: Brand Logo & Renter Portal Tag */}
-          <Link to="/renter/dashboard" className="flex items-center gap-2.5 group">
+          {/* Left: Brand Logo & Lender Portal Tag */}
+          <Link to="/lender/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[var(--accent)] to-indigo-600 flex items-center justify-center text-white shadow-md shadow-[var(--accent)]/20 group-hover:scale-105 transition-transform">
               <Grid className="w-5.5 h-5.5" />
             </div>
@@ -25,7 +25,7 @@ export default function RenterLayout() {
                 Rent<span className="text-[var(--accent)]">It</span>
               </span>
               <span className="text-[10px] font-extrabold text-emerald-500 tracking-widest uppercase mt-0.5">
-                Renter Partner Portal (60% Share)
+                Lender Partner Portal (60% Share)
               </span>
             </div>
           </Link>
@@ -54,14 +54,14 @@ export default function RenterLayout() {
             <div className="flex items-center gap-2 pl-1 border-l border-[var(--border)]">
               <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border)]">
                 <div className="w-7 h-7 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-black text-xs">
-                  {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'R'}
+                  {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'L'}
                 </div>
                 <div className="hidden sm:flex flex-col text-left">
                   <span className="text-xs font-bold text-[var(--text)] leading-tight max-w-[100px] truncate">
                     {user?.full_name || user?.email?.split('@')[0]}
                   </span>
                   <span className="text-[9px] font-extrabold text-emerald-500 uppercase tracking-wider">
-                    RENTER
+                    LENDER
                   </span>
                 </div>
               </div>

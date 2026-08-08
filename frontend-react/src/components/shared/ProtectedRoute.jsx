@@ -35,7 +35,7 @@ const ProtectedRoute = ({ allowedRole = null, children }) => {
 
   const role = String(user?.role || '').toUpperCase();
   const isAdminUser = isAdmin || role === 'ADMIN' || user?.is_staff || user?.is_superuser;
-  const isRenterUser = role === 'RENTER';
+  const isLenderUser = role === 'LENDER';
 
   if (allowedRole) {
     const required = String(allowedRole).toUpperCase();
@@ -43,11 +43,11 @@ const ProtectedRoute = ({ allowedRole = null, children }) => {
     if (required === 'ADMIN') {
       if (!isAdminUser) {
         // Wrong role — send to correct portal
-        if (isRenterUser) return <Navigate to="/renter/dashboard" replace />;
+        if (isLenderUser) return <Navigate to="/lender/dashboard" replace />;
         return <Navigate to="/" replace />;
       }
-    } else if (required === 'RENTER') {
-      if (!isRenterUser) {
+    } else if (required === 'LENDER') {
+      if (!isLenderUser) {
         if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
         return <Navigate to="/" replace />;
       }
@@ -55,7 +55,7 @@ const ProtectedRoute = ({ allowedRole = null, children }) => {
       // Generic role check
       if (role !== required) {
         if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
-        if (isRenterUser) return <Navigate to="/renter/dashboard" replace />;
+        if (isLenderUser) return <Navigate to="/lender/dashboard" replace />;
         return <Navigate to="/" replace />;
       }
     }

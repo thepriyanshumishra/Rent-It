@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button';
 import useAuth from '../../hooks/useAuth';
 import { toast } from '../../components/ui/Toast';
 
-const BecomeRenterPage = () => {
+const BecomeLenderPage = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -30,10 +30,10 @@ const BecomeRenterPage = () => {
     try {
       await register({
         ...formData,
-        role: 'RENTER'
+        role: 'LENDER'
       });
-      toast.success('Renter account created! Welcome to RentIt.');
-      navigate('/renter/dashboard');
+      toast.success('Lender account created! Welcome to RentIt.');
+      navigate('/lender/dashboard');
     } catch (err) {
       toast.error('Failed to create account. Email may already exist.');
     } finally {
@@ -52,7 +52,7 @@ const BecomeRenterPage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] font-black text-xs uppercase tracking-wider mb-4"
           >
-            <Sparkles className="w-3.5 h-3.5" /> RentIt Asset Partner Program
+            <Sparkles className="w-3.5 h-3.5" /> RentIt Asset Lender Program
           </motion.div>
           
           <h1 className="text-4xl sm:text-6xl font-black text-[var(--text)] tracking-tight mb-4">
@@ -99,7 +99,7 @@ const BecomeRenterPage = () => {
         {/* Form Section */}
         <div className="max-w-2xl mx-auto card p-8 sm:p-10 border border-[var(--border)] shadow-xl">
           <div className="mb-6 border-b border-[var(--border)] pb-4">
-            <h2 className="text-2xl font-black text-[var(--text)] mb-1">Create Renter Account</h2>
+            <h2 className="text-2xl font-black text-[var(--text)] mb-1">Create Lender Account</h2>
             <p className="text-xs text-[var(--text-muted)]">Register today and submit your first gear listing for HQ approval.</p>
           </div>
 
@@ -188,4 +188,4 @@ const BecomeRenterPage = () => {
   );
 };
 
-export default BecomeRenterPage;
+export default BecomeLenderPage;

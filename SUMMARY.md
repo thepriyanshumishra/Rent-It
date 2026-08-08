@@ -13,7 +13,7 @@ RentIt connects three distinct user roles into a cohesive rental ecosystem:
                                          │
         ┌────────────────────────────────┼────────────────────────────────┐
         │                                │                                │
- 🛍️ CUSTOMER PORTAL             🤝 RENTER PORTAL               👑 ADMIN HQ PANEL
+ 🛍️ CUSTOMER PORTAL             🤝 LENDER PORTAL               👑 ADMIN HQ PANEL
    - Equipment Discovery          - Single-Page Dashboard         - Top Navigation Pills
    - Rental Period Selection      - Equipment Submission Form     - HQ Operational Dashboard
    - Doorstep Delivery            - Live Search & Filtering       - Equipment Listing Approvals
@@ -24,7 +24,7 @@ RentIt connects three distinct user roles into a cohesive rental ecosystem:
 ### Roles & Responsibilities
 
 1. **Customer**: Browses curated rental gear, selects rental duration, places orders with doorstep delivery, pays security deposits, and manages active/completed rentals.
-2. **Renter Partner**: Submits gear for rental listing with proof of purchase and images, tracks verification status, monitors earnings, and manages active listings.
+2. **Lender Partner**: Submits gear for rental listing with proof of purchase and images, tracks verification status, monitors earnings, and manages active listings.
 3. **Admin (HQ Operations)**: Operates the platform via a centered top-pill navigation bar without sidebars. Manages gear verification & condition tagging, order dispatch & pickups, and stock availability.
 
 ---
@@ -35,8 +35,8 @@ The backend model architecture has been cleaned to eliminate redundant, dead, an
 
 ```text
 backend-drf/apps/
-├── accounts/          # User, RenterProfile, CustomerProfile, Address
-├── products/          # Category, Product, RenterListingRequest, ProductImage
+├── accounts/          # User, LenderProfile, CustomerProfile, Address
+├── products/          # Category, Product, LenderListingRequest, ProductImage
 ├── rentals/           # Cart, CartItem, RentalOrder, RentalOrderItem
 ├── payments/          # Payment
 └── notifications/     # Notification
@@ -46,13 +46,13 @@ backend-drf/apps/
 
 | App | Model | Purpose |
 | :--- | :--- | :--- |
-| **accounts** | `User` | Custom user model with `ADMIN`, `RENTER`, `CUSTOMER` roles & JWT auth |
-| **accounts** | `RenterProfile` | Payout details (`bank_account_number`, `ifsc_code`, `upi_id`), `wallet_balance`, `total_earnings` |
+| **accounts** | `User` | Custom user model with `ADMIN`, `LENDER`, `CUSTOMER` roles & JWT auth |
+| **accounts** | `LenderProfile` | Payout details (`bank_account_number`, `ifsc_code`, `upi_id`), `wallet_balance`, `total_earnings` |
 | **accounts** | `CustomerProfile` | Profile link for customers |
 | **accounts** | `Address` | Shipping addresses for doorstep delivery |
 | **products** | `Category` | Equipment categories (`name`, `slug`, `icon`, `is_active`) |
 | **products** | `Product` | Active rental gear details, daily price, security deposit, condition tag |
-| **products** | `RenterListingRequest` | Gear submission workflow for HQ inspection & verification |
+| **products** | `LenderListingRequest` | Gear submission workflow for HQ inspection & verification |
 | **products** | `ProductImage` | Product image gallery |
 | **rentals** | `Cart` | Customer shopping cart container |
 | **rentals** | `CartItem` | Items inside cart with quantity |
@@ -95,5 +95,5 @@ backend-drf/apps/
 For instant testing, 1-click auto-filling login buttons are configured on the `/login` page:
 
 * **Admin Account**: `admin@rentit.com` / `Password@123`
-* **Renter Account**: `renter@rentit.com` / `Password@123`
+* **Lender Account**: `lender@rentit.com` / `Password123!`
 * **Customer Account**: `customer@rentit.com` / `Password@123`

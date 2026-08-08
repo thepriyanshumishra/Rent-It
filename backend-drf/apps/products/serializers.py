@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, RenterListingRequest
+from .models import Category, Product, ProductImage, LenderListingRequest
 
 class CategorySerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
@@ -44,13 +44,13 @@ class ProductSerializer(serializers.ModelSerializer):
             return primary.image_url or (primary.image.url if primary.image else None)
         return None
 
-class RenterListingRequestSerializer(serializers.ModelSerializer):
+class LenderListingRequestSerializer(serializers.ModelSerializer):
     category_name = serializers.ReadOnlyField(source='category.name')
-    renter_username = serializers.ReadOnlyField(source='renter.username')
-    renter_email = serializers.ReadOnlyField(source='renter.email')
-    renter_phone = serializers.ReadOnlyField(source='renter.phone_number')
+    lender_username = serializers.ReadOnlyField(source='lender.username')
+    lender_email = serializers.ReadOnlyField(source='lender.email')
+    lender_phone = serializers.ReadOnlyField(source='lender.phone_number')
 
     class Meta:
-        model = RenterListingRequest
+        model = LenderListingRequest
         fields = '__all__'
-        read_only_fields = ('renter', 'status', 'approved_product', 'rejection_reason')
+        read_only_fields = ('lender', 'status', 'approved_product', 'rejection_reason')

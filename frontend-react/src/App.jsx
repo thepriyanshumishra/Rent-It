@@ -14,7 +14,7 @@ import PageTransition from './components/shared/PageTransition';
 const HomePage = React.lazy(() => import('./pages/customer/HomePage'));
 const ExplorePage = React.lazy(() => import('./pages/customer/ExplorePage'));
 const ProductDetailPage = React.lazy(() => import('./pages/customer/ProductDetailPage'));
-const BecomeRenterPage = React.lazy(() => import('./pages/customer/BecomeRenterPage'));
+const BecomeLenderPage = React.lazy(() => import('./pages/customer/BecomeLenderPage'));
 const CartPage = React.lazy(() => import('./pages/customer/CartPage'));
 const CheckoutPage = React.lazy(() => import('./pages/customer/CheckoutPage'));
 const OrderConfirmationPage = React.lazy(() => import('./pages/customer/OrderConfirmationPage'));
@@ -25,10 +25,10 @@ const AccountPage = React.lazy(() => import('./pages/customer/AccountPage'));
 const LoginPage = React.lazy(() => import('./pages/auth/LoginPage'));
 const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
 
-// Renter Portal Pages
-const RenterLayout = React.lazy(() => import('./pages/renter/RenterLayout'));
-const RenterDashboardPage = React.lazy(() => import('./pages/renter/RenterDashboardPage'));
-const NewListingPage = React.lazy(() => import('./pages/renter/NewListingPage'));
+// Lender Portal Pages
+const LenderLayout = React.lazy(() => import('./pages/lender/LenderLayout'));
+const LenderDashboardPage = React.lazy(() => import('./pages/lender/LenderDashboardPage'));
+const NewListingPage = React.lazy(() => import('./pages/lender/NewListingPage'));
 
 // Admin Portal Pages
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
@@ -56,7 +56,7 @@ const PageSpinner = () => (
 );
 
 // ─── Customer Layout (only for CUSTOMER role or unauthenticated users) ────────
-// ADMIN → /admin/dashboard, RENTER → /renter/dashboard
+// ADMIN → /admin/dashboard, LENDER → /lender/dashboard
 const CustomerLayout = () => {
   const { user, loading } = useContext(AuthContext);
 
@@ -64,10 +64,10 @@ const CustomerLayout = () => {
 
   const role = String(user?.role || '').toUpperCase();
   const isAdminUser = role === 'ADMIN' || user?.is_staff || user?.is_superuser;
-  const isRenterUser = role === 'RENTER';
+  const isLenderUser = role === 'LENDER';
 
   if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
-  if (isRenterUser) return <Navigate to="/renter/dashboard" replace />;
+  if (isLenderUser) return <Navigate to="/lender/dashboard" replace />;
 
   return (
     <div className="min-h-screen flex flex-col relative transition-colors duration-300">
@@ -78,7 +78,8 @@ const CustomerLayout = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/become-a-renter" element={<BecomeRenterPage />} />
+              <Route path="/become-a-lender" element={<BecomeLenderPage />} />
+              <Route path="/become-a-renter" element={<Navigate to="/become-a-lender" replace />} />
               <Route path="/product/:slug" element={<ProductDetailPage />} />
               <Route path="/cart" element={<CartPage />} />
 
@@ -122,16 +123,16 @@ function App() {
                   </Suspense>
                 } />
 
-                {/* Renter Portal — RENTER role only */}
-                <Route path="/renter" element={
+                {/* Lender Portal — LENDER role only */}
+                <Route path="/lender" element={
                   <Suspense fallback={null}>
-                    <ProtectedRoute allowedRole="RENTER">
-                      <RenterLayout />
+                    <ProtectedRoute allowedRole="LENDER">
+                      <LenderLayout />
                     </ProtectedRoute>
                   </Suspense>
                 }>
-                  <Route index element={<RenterDashboardPage />} />
-                  <Route path="dashboard" element={<RenterDashboardPage />} />
+                  <Route index element={<LenderDashboardPage />} />
+                  <Route path="dashboard" element={<LenderDashboardPage />} />
                   <Route path="listings/new" element={<NewListingPage />} />
                 </Route>
 

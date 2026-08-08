@@ -9,11 +9,11 @@ from django.db.models import Q
 from django.conf import settings
 from django.core.files.storage import default_storage
 
-from .models import Category, Product, ProductImage, RenterListingRequest
+from .models import Category, Product, ProductImage, LenderListingRequest
 from .serializers import (
     CategorySerializer, ProductSerializer,
     ProductImageSerializer,
-    RenterListingRequestSerializer
+    LenderListingRequestSerializer
 )
 from apps.accounts.models import User
 from apps.rentals.models import RentalOrderItem, RentalOrder
@@ -92,19 +92,19 @@ class ProductViewSet(viewsets.ModelViewSet):
             return [IsAdminUser()]
         return [IsAuthenticatedOrReadOnly()]
 
-class RenterListingRequestViewSet(viewsets.ModelViewSet):
+class LenderListingRequestViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
-    serializer_class = RenterListingRequestSerializer
-    queryset = RenterListingRequest.objects.all()
+    serializer_class = LenderListingRequestSerializer
+    queryset = LenderListingRequest.objects.all()
 
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser or user.role == User.Role.ADMIN or user.is_staff:
-            return RenterListingRequest.objects.all().order_by('-created_at')
-        return RenterListingRequest.objects.filter(renter=user).order_by('-created_at')
+            return LenderListingRequest.objects.all().order_by('-created_at')
+        return LenderListingRequest.objects.filter(lender=user).order_by('-created_at')
 
     def perform_create(self, serializer):
-        serializer.save(renter=self.request.user)
+        serializer.save(lender=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -128,16 +128,9 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
         req_obj = self.get_object()
         category = req_obj.category or Category.objects.first()
 
-        condition_tag = request.data.get('admin_condition_tag', req_obj.admin_condition_tag)
-        custom_condition = request.data.get('admin_custom_condition', req_obj.admin_custom_condition)
         approved_qty = int(request.data.get('approved_quantity', req_obj.quantity or 1))
         rejected_qty = int(request.data.get('rejected_quantity', 0))
         rejection_reason = request.data.get('rejection_reason', req_obj.rejection_reason or '')
-        
-        if condition_tag:
-            req_obj.admin_condition_tag = condition_tag
-        if custom_condition:
-            req_obj.admin_custom_condition = custom_condition
 
         req_obj.approved_quantity = approved_qty
         req_obj.rejected_quantity = rejected_qty
@@ -145,24 +138,21 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
             req_obj.rejection_reason = rejection_reason
         
         if approved_qty > 0 and rejected_qty > 0:
-            req_obj.status = RenterListingRequest.Status.PARTIALLY_APPROVED
+            req_obj.status = LenderListingRequest.Status.PARTIALLY_APPROVED
         else:
-            req_obj.status = RenterListingRequest.Status.APPROVED
-
-        final_condition = custom_condition if condition_tag == 'Custom' and custom_condition else condition_tag
+            req_obj.status = LenderListingRequest.Status.APPROVED
 
         product = req_obj.approved_product
         if not product:
             product = Product.objects.create(
                 name=req_obj.product_name,
                 category=category,
-                renter=req_obj.renter,
+                lender=req_obj.lender,
                 price=req_obj.daily_price,
                 security_deposit=req_obj.security_deposit or 0,
                 short_description=req_obj.short_description or req_obj.product_name,
                 description=req_obj.description or req_obj.short_description,
                 included_items=req_obj.included_items or '',
-                condition_tag=final_condition,
                 quantity=approved_qty,
                 available_quantity=approved_qty,
                 is_active=True
@@ -183,7 +173,6 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
 
             req_obj.approved_product = product
         else:
-            product.condition_tag = final_condition
             product.quantity = approved_qty
             product.available_quantity = approved_qty
             product.price = req_obj.daily_price
@@ -194,7 +183,7 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
 
         return Response({
             'detail': f'Listing request processed! {approved_qty} unit(s) approved & live.',
-            'request': RenterListingRequestSerializer(req_obj).data,
+            'request': LenderListingRequestSerializer(req_obj).data,
             'product': ProductSerializer(product).data
         })
 
@@ -202,7 +191,7 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
     def reject(self, request, pk=None):
         req_obj = self.get_object()
         reason = request.data.get('rejection_reason', 'Failed HQ Quality Check / Invalid Purchase Bill')
-        req_obj.status = RenterListingRequest.Status.REJECTED
+        req_obj.status = LenderListingRequest.Status.REJECTED
         req_obj.rejection_reason = reason
         req_obj.approved_quantity = 0
         req_obj.rejected_quantity = req_obj.quantity or 1
@@ -213,7 +202,7 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
 
         return Response({
             'detail': 'Listing request rejected with feedback.',
-            'request': RenterListingRequestSerializer(req_obj).data
+            'request': LenderListingRequestSerializer(req_obj).data
         })
 
 class ProductImageViewSet(viewsets.ModelViewSet):

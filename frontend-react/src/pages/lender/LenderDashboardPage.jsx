@@ -6,14 +6,14 @@ import useAuth from '../../hooks/useAuth';
 import { toast } from '../../components/ui/Toast';
 import api from '../../api/axios';
 
-export default function RenterDashboardPage() {
+export default function LenderDashboardPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
   const { data: requests = [], isLoading } = useQuery({
-    queryKey: ['renter-listing-requests'],
+    queryKey: ['lender-listing-requests'],
     queryFn: async () => {
       try {
         const { data } = await api.get('/listing-requests/');
@@ -32,7 +32,7 @@ export default function RenterDashboardPage() {
     try {
       await api.delete(`/listing-requests/${id}/`);
       toast.success(`Listing request "${name}" deleted successfully.`);
-      queryClient.invalidateQueries(['renter-listing-requests']);
+      queryClient.invalidateQueries(['lender-listing-requests']);
     } catch (err) {
       toast.error('Failed to delete listing request.');
     } finally {
@@ -40,8 +40,8 @@ export default function RenterDashboardPage() {
     }
   };
 
-  const walletBalance = user?.renter_profile?.wallet_balance || 0;
-  const totalEarnings = user?.renter_profile?.total_earnings || 0;
+  const walletBalance = user?.lender_profile?.wallet_balance || 0;
+  const totalEarnings = user?.lender_profile?.total_earnings || 0;
 
   const filteredRequests = requests.filter(req => 
     req.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -54,13 +54,13 @@ export default function RenterDashboardPage() {
       {/* Header Banner */}
       <div className="card p-6 border border-[var(--border)] bg-gradient-to-r from-[var(--accent-subtle)] to-transparent flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 rounded-2xl shadow-xs">
         <div>
-          <span className="badge badge-info mb-2 font-bold uppercase tracking-wider text-[10px]">Verified Renter Partner</span>
-          <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">Renter Earnings & Fleet Overview</h2>
+          <span className="badge badge-info mb-2 font-bold uppercase tracking-wider text-[10px]">Verified Lender Partner</span>
+          <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">Lender Earnings & Fleet Overview</h2>
           <p className="text-xs text-[var(--text-muted)] font-medium mt-1">
             You earn 60% of every completed rental. RentIt HQ handles quality testing, escrow, and doorstep logistics.
           </p>
         </div>
-        <Link to="/renter/listings/new" className="shrink-0">
+        <Link to="/lender/listings/new" className="shrink-0">
           <button className="btn-primary py-2.5 px-5 font-bold text-xs flex items-center gap-2 rounded-xl shadow-sm">
             <PlusCircle className="w-4 h-4" /> List New Equipment
           </button>
@@ -137,7 +137,7 @@ export default function RenterDashboardPage() {
               {searchTerm ? 'Try searching for another keyword.' : 'Start earning 60% passive income today by submitting your first camera, MacBook, or e-bike for HQ review.'}
             </p>
             {!searchTerm && (
-              <Link to="/renter/listings/new">
+              <Link to="/lender/listings/new">
                 <button className="btn-primary py-2 px-4 text-xs font-extrabold mt-2 rounded-xl shadow-sm">Submit First Item</button>
               </Link>
             )}

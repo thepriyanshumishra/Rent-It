@@ -1,11 +1,11 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, RenterListingRequest
+from .models import Category, Product, ProductImage, LenderListingRequest
 
-@admin.register(RenterListingRequest)
-class RenterListingRequestAdmin(admin.ModelAdmin):
-    list_display = ('product_name', 'renter', 'daily_price', 'security_deposit', 'status', 'created_at')
+@admin.register(LenderListingRequest)
+class LenderListingRequestAdmin(admin.ModelAdmin):
+    list_display = ('product_name', 'lender', 'daily_price', 'security_deposit', 'status', 'created_at')
     list_filter = ('status', 'category')
-    search_fields = ('product_name', 'renter__username', 'renter__email')
+    search_fields = ('product_name', 'lender__username', 'lender__email')
 
 admin.site.register(Category)
 admin.site.register(Product)

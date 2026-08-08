@@ -127,7 +127,7 @@ export default function ListingRequestsPage() {
           <span className="badge badge-info mb-1.5 font-bold uppercase tracking-wider text-[10px]">
             HQ Quality Control Portal
           </span>
-          <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">Renter Listing Verification & Inspection</h2>
+          <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">Lender Listing Verification & Inspection</h2>
           <p className="text-xs text-[var(--text-muted)] font-medium mt-1">
             Review submitted listing requests and approve items for live storefront listing.
           </p>
@@ -266,10 +266,10 @@ export default function ListingRequestsPage() {
                 </div>
                 <h3 className="text-2xl font-black text-[var(--text)] tracking-tight">{selectedReq.product_name}</h3>
                 
-                {/* Renter Profile Line */}
+                {/* Lender Profile Line */}
                 <div className="flex items-center gap-2 mt-1.5 text-xs">
-                  <span className="font-bold text-[var(--text)]">Renter: {selectedReq.renter_username}</span>
-                  <span className="text-[var(--text-muted)]">({selectedReq.renter_email})</span>
+                  <span className="font-bold text-[var(--text)]">Lender: {selectedReq.lender_username || selectedReq.renter_username}</span>
+                  <span className="text-[var(--text-muted)]">({selectedReq.lender_email || selectedReq.renter_email})</span>
                   <span className="text-[var(--accent)] font-bold">• 60% Revenue Share Partner</span>
                 </div>
               </div>
