@@ -45,6 +45,39 @@ const RentalDatePicker = ({
     if (onEndChange) onEndChange(newEnd);
   };
 
+  const handleStartChangeInternal = (newStart) => {
+    if (onStartChange) onStartChange(newStart);
+
+    if (endDate) {
+      const startMs = new Date(newStart).getTime();
+      const endMs = new Date(endDate).getTime();
+      
+      // If new start date is on or after current end date, auto-adjust end date to start + 1 day (or current preset)
+      if (startMs >= endMs) {
+        const adjustedEnd = new Date(startMs + 86400000).toISOString().split('T')[0];
+        if (onEndChange) onEndChange(adjustedEnd);
+      }
+    }
+  };
+
+  const handleEndChangeInternal = (newEnd) => {
+    if (!startDate) {
+      if (onEndChange) onEndChange(newEnd);
+      return;
+    }
+
+    const startMs = new Date(startDate).getTime();
+    const endMs = new Date(newEnd).getTime();
+
+    // If selected end date is on or before start date, enforce minimum 1 day duration
+    if (endMs <= startMs) {
+      const minEnd = new Date(startMs + 86400000).toISOString().split('T')[0];
+      if (onEndChange) onEndChange(minEnd);
+    } else {
+      if (onEndChange) onEndChange(newEnd);
+    }
+  };
+
   const daysCount = calculateDays();
   const qty = Math.max(1, Number(quantity) || 1);
   const dailyRate = Number(basePrice) || 0;
@@ -93,7 +126,7 @@ const RentalDatePicker = ({
               type="date"
               min={today}
               value={startDate || defaultStart}
-              onChange={(e) => onStartChange && onStartChange(e.target.value)}
+              onChange={(e) => handleStartChangeInternal(e.target.value)}
               className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
             />
           </div>
@@ -103,7 +136,7 @@ const RentalDatePicker = ({
               type="date"
               min={minEndDate}
               value={endDate || defaultEnd}
-              onChange={(e) => onEndChange && onEndChange(e.target.value)}
+              onChange={(e) => handleEndChangeInternal(e.target.value)}
               className="w-full bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs font-bold text-[var(--text)] focus:border-[var(--accent)] focus:outline-none"
             />
           </div>
