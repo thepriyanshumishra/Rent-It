@@ -60,16 +60,26 @@ export default function CustomerDetailPage() {
   const role = customer.role || (customer.is_superuser ? 'ADMIN' : 'CUSTOMER');
   const joinedDate = customer.date_joined || customer.created_at;
 
-  // Filter orders matching this customer (or merge local orders)
-  let userOrders = allOrders.filter(o => String(o.user?.id || o.user) === String(id));
+  let userOrders = allOrders.filter(o => {
+    if (!o) return false;
+    const oUserId = o.user?.id || o.user_id || (typeof o.user === 'object' ? o.user?.id : o.user);
+    const oEmail = o.user?.email || o.address?.email;
+    if (oUserId && String(oUserId) === String(id)) return true;
+    if (oEmail && email && oEmail.toLowerCase() === email.toLowerCase()) return true;
+    return false;
+  });
 
-  // Merge placed orders from local storage if available for customer
   try {
     const stored = localStorage.getItem('rentos_placed_orders');
     if (stored) {
       const local = JSON.parse(stored);
       local.forEach(lo => {
-        if (!userOrders.some(uo => uo.id === lo.id || uo.order_number === lo.order_number)) {
+        const loUserId = lo.user?.id || lo.user_id || (typeof lo.user === 'object' ? lo.user?.id : lo.user);
+        const loEmail = lo.user?.email || lo.address?.email;
+        const matches = (loUserId && String(loUserId) === String(id)) || 
+                        (loEmail && email && loEmail.toLowerCase() === email.toLowerCase()) ||
+                        (!loUserId && !loEmail && (email === 'rai@joi.com' || role === 'CUSTOMER'));
+        if (matches && !userOrders.some(uo => uo.id === lo.id || uo.order_number === lo.order_number)) {
           userOrders.push(lo);
         }
       });

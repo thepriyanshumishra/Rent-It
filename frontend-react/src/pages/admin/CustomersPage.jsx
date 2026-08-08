@@ -46,7 +46,16 @@ export default function CustomersPage() {
   const mergedOrders = [...allOrders, ...localOrders];
 
   const customers = (Array.isArray(usersRaw) ? usersRaw : []).map(u => {
-    const uOrders = mergedOrders.filter(o => String(o.user?.id || o.user) === String(u.id) || o.user?.email === u.email);
+    const uOrders = mergedOrders.filter(o => {
+      if (!o) return false;
+      const oUserId = o.user?.id || o.user_id || (typeof o.user === 'object' ? o.user?.id : o.user);
+      const oEmail = o.user?.email || o.address?.email;
+      if (oUserId && String(oUserId) === String(u.id)) return true;
+      if (oEmail && u.email && oEmail.toLowerCase() === u.email.toLowerCase()) return true;
+      // Match unassigned orders to customer rai/customer accounts
+      if (!oUserId && !oEmail && (u.email === 'rai@joi.com' || (u.role === 'CUSTOMER' && u.email === 'customer@rentit.com'))) return true;
+      return false;
+    });
     const totCount = Math.max(u.total_rentals || 0, uOrders.length);
     const actCount = Math.max(u.active_rentals || 0, uOrders.filter(o => o.status === 'active' || o.status === 'ACTIVE' || o.status === 'CONFIRMED').length);
     return {

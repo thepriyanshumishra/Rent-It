@@ -136,6 +136,7 @@ const CheckoutPage = () => {
       total_price: calculatedTotal,
       delivery_method: 'delivery',
       address: address,
+      user: user ? { id: user.id, email: user.email, name: user.full_name || user.first_name || user.username } : null,
       created_at: new Date().toISOString(),
       start_date: itemsList[0]?.start_date || itemsList[0]?.startDate || new Date().toISOString().split('T')[0],
       end_date: itemsList[0]?.end_date || itemsList[0]?.endDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
@@ -148,7 +149,9 @@ const CheckoutPage = () => {
       await rentalsApi.checkoutCart({
         delivery_address: `${address.line1}, ${address.line2}, ${address.city}, ${address.state}`,
         delivery_pincode: address.zip,
-        fulfillment_type: 'DOORSTEP'
+        fulfillment_type: 'DOORSTEP',
+        total_amount: calculatedTotal,
+        items: itemsList
       });
     } catch (err) {
       console.warn('Backend order API skipped/fallback', err);
