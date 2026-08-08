@@ -126,16 +126,6 @@ const RentalCard = ({ rental, onExtend }) => {
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          {onExtend && (
-            <Button 
-              variant="secondary" 
-              size="sm"
-              className="rounded-xl font-bold text-xs py-2 px-3 flex-1 sm:flex-none"
-              onClick={(e) => { e.stopPropagation(); onExtend(rental); }}
-            >
-              Extend Duration
-            </Button>
-          )}
 
           <Button 
             size="sm"
