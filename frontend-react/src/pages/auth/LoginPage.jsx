@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Sun, Moon, ArrowLeft, Lock, Mail, ShieldCheck, UserCheck, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Sun, Moon, ArrowLeft, Lock, Mail, ShieldCheck, UserCheck, Sparkles, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import useAuth from '../../hooks/useAuth';
 import Button from '../../components/ui/Button';
@@ -93,10 +93,10 @@ const LoginPage = () => {
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => fillDemo('admin@rentit.com', 'admin123456')}
+                onClick={() => fillDemo('merchant@rentit.com', 'merchant123456')}
                 className="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 flex items-center justify-center gap-1.5 transition-all"
               >
-                <ShieldCheck className="w-3.5 h-3.5" /> Admin Demo
+                <Store className="w-3.5 h-3.5" /> Merchant Demo
               </button>
               <button
                 type="button"
@@ -106,6 +106,9 @@ const LoginPage = () => {
                 <UserCheck className="w-3.5 h-3.5" /> Customer Demo
               </button>
             </div>
+            <p className="text-[11px] text-[var(--text-muted)] text-center mt-2 font-medium">
+              HQ Super Admin? Log in via <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer" className="text-[var(--accent)] underline font-bold">Django Admin Panel</a>
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">

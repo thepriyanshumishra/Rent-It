@@ -31,7 +31,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
     
-    // Set token immediately for getProfile request
     api.defaults.headers.Authorization = `Bearer ${data.access}`;
     
     const profile = await getProfile();
@@ -65,10 +64,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = !!user;
+  const isMerchant = user?.role === 'MERCHANT' || !!user?.merchant_profile;
   const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin' || user?.is_staff || user?.is_superuser;
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isAdmin, login, logout, register, loading, setUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isMerchant, isAdmin, login, logout, register, loading, setUser }}>
       {children}
     </AuthContext.Provider>
   );

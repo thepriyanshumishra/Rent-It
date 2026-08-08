@@ -3,34 +3,41 @@ import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, FileText, Package, Archive, Users, Building2,
-  DollarSign, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight 
+  DollarSign, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
+  QrCode, Truck, RotateCcw, Store
 } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
 const navItems = [
-  { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
-  { path: '/admin/rentals', icon: FileText, label: 'Rentals' },
-  { path: '/admin/business-orders', icon: Building2, label: 'Business Orders' },
-  { path: '/admin/products', icon: Package, label: 'Products' },
-  { path: '/admin/inventory', icon: Archive, label: 'Inventory' },
-  { path: '/admin/customers', icon: Users, label: 'Customers' },
-  { path: '/admin/quotations', icon: FileText, label: 'Quotations' },
-  { path: '/admin/finance', icon: DollarSign, label: 'Finance' },
-  { path: '/admin/reports', icon: BarChart2, label: 'Reports' },
-  { path: '/admin/settings', icon: Settings, label: 'Settings' }
+  { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Store Overview' },
+  { path: '/admin/rentals', icon: QrCode, label: 'Pickups & Orders' },
+  { path: '/admin/business-orders', icon: Building2, label: 'B2B Inquiries' },
+  { path: '/admin/products', icon: Package, label: 'Products & Fleet' },
+  { path: '/admin/inventory', icon: Archive, label: 'Store Inventory' },
+  { path: '/admin/customers', icon: Users, label: 'Local Customers' },
+  { path: '/admin/finance', icon: DollarSign, label: 'Finances & Deposits' },
+  { path: '/admin/reports', icon: BarChart2, label: 'Analytics' },
 ];
 
 export default function AdminSidebar({ collapsed, onToggle }) {
   const { user, logout } = useAuth();
+  const storeName = user?.merchant_profile?.store_name || 'Connaught Place Store';
 
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 60 : 240 }}
+      animate={{ width: collapsed ? 60 : 250 }}
       className="flex flex-col h-full bg-[var(--bg-elevated)] border-r border-[var(--border)] overflow-hidden shrink-0"
     >
-      <div className="flex items-center justify-between p-4 h-[60px] border-b border-[var(--border)]">
-        {!collapsed && <span className="text-xl font-black text-[var(--text)] whitespace-nowrap">RentIt</span>}
+      <div className="flex items-center justify-between p-4 h-[65px] border-b border-[var(--border)]">
+        {!collapsed && (
+          <div className="flex flex-col">
+            <span className="text-lg font-black text-[var(--text)] flex items-center gap-1.5">
+              <Store className="w-5 h-5 text-[var(--accent)]" /> Merchant Portal
+            </span>
+            <span className="text-[11px] font-bold text-[var(--accent)] truncate max-w-[170px]">{storeName}</span>
+          </div>
+        )}
         <button 
           onClick={onToggle}
           className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mx-auto"
@@ -45,31 +52,32 @@ export default function AdminSidebar({ collapsed, onToggle }) {
             key={item.path}
             to={item.path}
             className={({ isActive }) => `
-              flex items-center px-3 py-2.5 rounded-md transition-all group relative
+              flex items-center px-3 py-2.5 rounded-xl transition-all group relative font-medium text-sm
               ${isActive 
-                ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border-l-2 border-[var(--accent)]' 
-                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text)] border-l-2 border-transparent'
+                ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border-l-4 border-[var(--accent)] font-bold' 
+                : 'text-[var(--text-secondary)] hover:bg-[var(--bg-subtle)] hover:text-[var(--text)] border-l-4 border-transparent'
               }
             `}
             title={collapsed ? item.label : undefined}
           >
-            <item.icon size={20} className="shrink-0" />
-            {!collapsed && <span className="ml-3 font-medium whitespace-nowrap">{item.label}</span>}
+            <item.icon size={18} className="shrink-0" />
+            {!collapsed && <span className="ml-3 truncate">{item.label}</span>}
           </NavLink>
         ))}
       </nav>
 
       <div className="p-4 border-t border-[var(--border)]">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center font-bold shrink-0">
-            {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
+          <div className="w-9 h-9 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center font-black shrink-0">
+            {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'M'}
           </div>
           {!collapsed && (
             <div className="ml-3 flex-1 overflow-hidden">
-              <p className="text-sm font-medium text-[var(--text)] truncate">{user?.full_name || user?.email || 'Admin User'}</p>
+              <p className="text-sm font-bold text-[var(--text)] truncate">{user?.full_name || 'Merchant Owner'}</p>
+              <p className="text-[11px] text-[var(--text-muted)] truncate">{user?.email}</p>
               <button 
                 onClick={logout}
-                className="text-xs text-[var(--text-muted)] hover:text-[var(--danger)] flex items-center mt-1 transition-colors"
+                className="text-xs text-[var(--danger)] hover:underline flex items-center mt-1 font-semibold transition-colors"
               >
                 <LogOut size={12} className="mr-1" /> Sign Out
               </button>

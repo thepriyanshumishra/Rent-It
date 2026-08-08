@@ -7,12 +7,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
-    UserProfileSerializer, ChangePasswordSerializer, AddressSerializer
+    UserProfileSerializer, ChangePasswordSerializer, AddressSerializer,
+    MerchantSerializer
 )
-from .models import Address
+from .models import Address, Merchant
 from .permissions import IsOwnerOrReadOnly, IsAdminUser
 
 User = get_user_model()
+
+class MerchantListView(generics.ListAPIView):
+    permission_classes = (AllowAny,)
+    serializer_class = MerchantSerializer
+    queryset = Merchant.objects.filter(is_active=True)
 
 class RegisterView(APIView):
     permission_classes = (AllowAny,)
@@ -21,7 +27,6 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            # Generate JWT tokens immediately so frontend can log in
             refresh = RefreshToken.for_user(user)
             return Response({
                 'access': str(refresh.access_token),
@@ -60,6 +65,10 @@ class LoginView(APIView):
         if not user.is_active:
             return Response({"detail": "User account is disabled."}, status=status.HTTP_401_UNAUTHORIZED)
 
+        merchant_data = None
+        if hasattr(user, 'merchant_profile'):
+            merchant_data = MerchantSerializer(user.merchant_profile).data
+
         refresh = RefreshToken.for_user(user)
         return Response({
             'access': str(refresh.access_token),
@@ -72,9 +81,11 @@ class LoginView(APIView):
                 'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
                 'phone': user.phone_number,
                 'role': user.role,
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'merchant_profile': merchant_data,
             }
         }, status=status.HTTP_200_OK)
-
 
 class RefreshTokenView(TokenRefreshView):
     pass

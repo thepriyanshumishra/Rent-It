@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Cart, CartItem, RentalOrder, RentalOrderItem
 from apps.products.models import Product
 from apps.products.serializers import ProductSerializer
+from apps.accounts.serializers import MerchantSerializer
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
@@ -49,12 +50,35 @@ class CartSerializer(serializers.ModelSerializer):
         return f"{total:.2f}"
 
 class RentalOrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.SerializerMethodField()
+
     class Meta:
         model = RentalOrderItem
         fields = '__all__'
 
+    def get_product(self, obj):
+        try:
+            prod = Product.objects.get(id=obj.product_id)
+            return ProductSerializer(prod).data
+        except Product.DoesNotExist:
+            return None
+
 class RentalOrderSerializer(serializers.ModelSerializer):
     items = RentalOrderItemSerializer(many=True, read_only=True)
+    merchant = MerchantSerializer(read_only=True)
+    customer_name = serializers.SerializerMethodField()
+    customer_email = serializers.SerializerMethodField()
+    customer_phone = serializers.SerializerMethodField()
+
     class Meta:
         model = RentalOrder
         fields = '__all__'
+
+    def get_customer_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.username
+
+    def get_customer_email(self, obj):
+        return obj.user.email
+
+    def get_customer_phone(self, obj):
+        return obj.user.phone_number or ''

@@ -10,7 +10,7 @@ import { ThemeContext } from '../../context/ThemeContext';
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user, isAdmin, logout } = useAuth();
+  const { isAuthenticated, user, isAdmin, isMerchant, logout } = useAuth();
   const { totalItems } = useCart();
   const { unreadCount } = useNotifications();
   const { theme, toggleTheme } = useContext(ThemeContext);
@@ -79,12 +79,12 @@ const Navbar = () => {
             <Package className="w-4 h-4" /> My Rentals
           </Link>
 
-          {isAdmin && (
+          {(isAdmin || isMerchant) && (
             <Link 
-              to="/admin"
-              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20`}
+              to="/admin/dashboard"
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent-subtle-hover)]`}
             >
-              <LayoutDashboard className="w-4 h-4" /> Admin Portal
+              <LayoutDashboard className="w-4 h-4" /> Merchant Portal
             </Link>
           )}
         </nav>

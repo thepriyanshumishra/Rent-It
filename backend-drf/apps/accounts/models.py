@@ -6,6 +6,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         CUSTOMER = 'CUSTOMER', _('Customer')
         ADMIN = 'ADMIN', _('Admin')
+        MERCHANT = 'MERCHANT', _('Merchant')
         STAFF = 'STAFF', _('Staff')
 
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.CUSTOMER)
@@ -13,6 +14,20 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class Merchant(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='merchant_profile')
+    store_name = models.CharField(max_length=255)
+    store_code = models.CharField(max_length=50, unique=True)
+    city = models.CharField(max_length=100)
+    pincode = models.CharField(max_length=20)
+    address = models.TextField()
+    phone = models.CharField(max_length=20)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.store_name} - {self.city} ({self.store_code})"
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')

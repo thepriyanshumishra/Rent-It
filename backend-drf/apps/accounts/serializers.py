@@ -3,16 +3,16 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomerProfile, Address
+from .models import CustomerProfile, Address, Merchant
 
 User = get_user_model()
 
+class MerchantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Merchant
+        fields = ('id', 'store_name', 'store_code', 'city', 'pincode', 'address', 'phone', 'is_active', 'created_at')
+
 class RegisterSerializer(serializers.Serializer):
-    """
-    Registration serializer — accepts first_name, last_name, email, phone (optional),
-    password, confirm_password. Auto-generates username from email.
-    Returns JWT tokens on success.
-    """
     first_name = serializers.CharField(max_length=150, required=True)
     last_name = serializers.CharField(max_length=150, required=True)
     email = serializers.EmailField(required=True)
@@ -36,7 +36,6 @@ class RegisterSerializer(serializers.Serializer):
         phone = validated_data.pop('phone', '')
         email = validated_data['email']
 
-        # Auto-generate a unique username from email prefix
         base_username = email.split('@')[0]
         username = base_username
         counter = 1
@@ -52,19 +51,14 @@ class RegisterSerializer(serializers.Serializer):
             password=validated_data['password'],
             phone_number=phone,
         )
-        # Create CustomerProfile
         CustomerProfile.objects.get_or_create(user=user)
         return user
 
 class LoginSerializer(serializers.Serializer):
-    """Email + password login serializer."""
     email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, required=True)
 
-
-# Keep alias for compatibility
 CustomTokenObtainPairSerializer = LoginSerializer
-
 
 class CustomerProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -72,16 +66,15 @@ class CustomerProfileSerializer(serializers.ModelSerializer):
         fields = ('date_of_birth', 'loyalty_points')
         read_only_fields = ('loyalty_points',)
 
-
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = '__all__'
         read_only_fields = ('user',)
 
-
 class UserSerializer(serializers.ModelSerializer):
     customer_profile = CustomerProfileSerializer(read_only=True)
+    merchant_profile = MerchantSerializer(read_only=True)
     addresses = AddressSerializer(many=True, read_only=True)
     phone = serializers.CharField(source='phone_number', read_only=True)
     full_name = serializers.SerializerMethodField()
@@ -91,21 +84,21 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
             'full_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser',
-            'customer_profile', 'addresses'
+            'customer_profile', 'merchant_profile', 'addresses'
         )
         read_only_fields = ('role', 'username', 'is_staff', 'is_superuser')
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.username
 
-
 class UserProfileSerializer(serializers.ModelSerializer):
     customer_profile = CustomerProfileSerializer(required=False)
+    merchant_profile = MerchantSerializer(read_only=True)
     phone = serializers.CharField(source='phone_number', required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser', 'customer_profile')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser', 'customer_profile', 'merchant_profile')
         read_only_fields = ('username', 'email', 'role', 'is_staff', 'is_superuser')
 
     def update(self, instance, validated_data):
@@ -120,7 +113,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
                 setattr(profile, attr, value)
             profile.save()
         return instance
-
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
