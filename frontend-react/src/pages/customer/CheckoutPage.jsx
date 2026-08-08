@@ -83,7 +83,7 @@ const CheckoutPage = () => {
 const getDays = (item) => {
   const s = item.start_date || item.startDate;
   const e = item.end_date || item.endDate;
-  if (!s || !e) return 3;
+  if (!s || !e) return 1;
   const start = new Date(s);
   const end = new Date(e);
   const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));

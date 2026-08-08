@@ -43,11 +43,25 @@ export const CartProvider = ({ children }) => {
     const productId = productObj?.id || itemData.product_id;
     const qty = itemData.quantity || 1;
 
+    // Pre-check quantity cap before attempting API
+    const availableQty = productObj?.available_quantity ?? productObj?.quantity ?? 99;
+    const alreadyInCart = (cart?.items || [])
+      .filter(i => (i.product?.id || i.product_id) === productId)
+      .reduce((sum, i) => sum + (i.quantity || 1), 0);
+
+    if (alreadyInCart >= availableQty) {
+      const { toast: t } = await import('../components/ui/Toast');
+      t.error(`Only ${availableQty} unit(s) available — you already have ${alreadyInCart} in your cart.`);
+      return;
+    }
+
     if (isAuthenticated) {
       try {
         await apiAddToCart({
           product_id: productId,
           quantity: qty,
+          start_date: itemData.startDate || itemData.start_date || null,
+          end_date: itemData.endDate || itemData.end_date || null,
           rental_period: itemData.pricing?.id || null
         });
         await fetchCart();
@@ -61,28 +75,57 @@ export const CartProvider = ({ children }) => {
   };
 
   const addLocalItem = (productObj, qty, itemData = {}) => {
+    const sDate = itemData?.startDate || itemData?.start_date || null;
+    const eDate = itemData?.endDate || itemData?.end_date || null;
+
     setCart(prevCart => {
       const existingItems = prevCart?.items || [];
-      const existingIdx = existingItems.findIndex(i => (i.product?.id || i.product_id) === productObj.id);
-      
+
+      // Key: same product + same start + same end date = merge quantities
+      // Different dates = separate line item
+      const existingIdx = existingItems.findIndex(i => {
+        const sameProduct = (i.product?.id || i.product_id) === productObj.id;
+        const iStart = i.start_date || i.startDate || null;
+        const iEnd = i.end_date || i.endDate || null;
+        const sameStartDate = iStart === sDate;
+        const sameEndDate = iEnd === eDate;
+        return sameProduct && sameStartDate && sameEndDate;
+      });
+
+      // Enforce available_quantity cap across ALL cart entries for this product
+      const availableQty = productObj?.available_quantity ?? productObj?.quantity ?? 99;
+      const alreadyInCart = existingItems
+        .filter(i => (i.product?.id || i.product_id) === productObj.id)
+        .reduce((sum, i) => sum + (i.quantity || 1), 0);
+      const allowedQty = Math.min(qty, Math.max(0, availableQty - alreadyInCart));
+
+      if (allowedQty <= 0) {
+        // Signal overflow — caller will show toast
+        return { ...prevCart, _quantityExceeded: productObj.id };
+      }
+
       let newItems = [...existingItems];
       if (existingIdx > -1) {
+        // Merge with existing same-period entry, still capped
+        const newQty = newItems[existingIdx].quantity + allowedQty;
         newItems[existingIdx] = {
           ...newItems[existingIdx],
-          quantity: newItems[existingIdx].quantity + qty
+          quantity: Math.min(newQty, availableQty)
         };
       } else {
         newItems.push({
-          id: Date.now(),
+          id: `${productObj.id}-${sDate}-${eDate}-${Date.now()}`,
           product_id: productObj.id,
           product: productObj,
-          quantity: qty,
-          start_date: itemData?.startDate,
-          end_date: itemData?.endDate,
+          quantity: allowedQty,
+          start_date: sDate,
+          startDate: sDate,
+          end_date: eDate,
+          endDate: eDate,
           securityDeposit: productObj?.security_deposit ?? itemData?.securityDeposit
         });
       }
-      return { ...prevCart, items: newItems };
+      return { ...prevCart, items: newItems, _quantityExceeded: null };
     });
   };
 
