@@ -53,9 +53,19 @@ const ProductDetailPage = () => {
 
   const relatedProducts = rawRelated.filter(p => p.id !== product?.id).slice(0, 3);
 
-  // Dynamic availability check
+  // Dynamic availability check — only mark as "Out on Rental" when ZERO units remain
   useEffect(() => {
     if (!product) return;
+
+    // If the backend says there are still units available, never show Out on Rental
+    const availQty = product.available_quantity ?? product.quantity ?? 1;
+    if (availQty > 0) {
+      setRentedInfo(null);
+      setNextAvailableDate(null);
+      return;
+    }
+
+    // available_quantity === 0: check localStorage for an active order to compute unlock time
     try {
       const stored = localStorage.getItem('rentos_placed_orders');
       if (stored) {
@@ -63,30 +73,24 @@ const ProductDetailPage = () => {
         const activeOrder = orders.find(o => {
           const pName = o.product?.name || o.items?.[0]?.product?.name || '';
           return (pName && product.name && (
-            pName.toLowerCase().includes(product.name.toLowerCase()) || 
+            pName.toLowerCase().includes(product.name.toLowerCase()) ||
             product.name.toLowerCase().includes(pName.toLowerCase())
           )) || o.product_id === product.id;
         });
 
         if (activeOrder && activeOrder.end_date) {
           const endMs = new Date(activeOrder.end_date).getTime();
-          const nowMs = Date.now();
-          const diffMs = endMs - nowMs;
-
+          const diffMs = endMs - Date.now();
           if (diffMs > 0) {
             const hours = Math.floor(diffMs / 3600000);
             const mins = Math.floor((diffMs % 3600000) / 60000);
             setRentedInfo({ hours, mins });
             setNextAvailableDate(activeOrder.end_date);
-          } else {
-            setRentedInfo(null);
-            setNextAvailableDate(null);
+            return;
           }
-        } else {
-          setRentedInfo(null);
-          setNextAvailableDate(null);
         }
       }
+      setRentedInfo({ hours: 0, mins: 0 });
     } catch (e) {
       console.warn('Stock status check warning', e);
     }
@@ -332,13 +336,13 @@ const ProductDetailPage = () => {
                   <h1 className="text-2xl font-black text-[var(--text)] leading-tight tracking-tight">
                     {product.name}
                   </h1>
-                  {rentedInfo ? (
+                  {(product?.available_quantity === 0 && rentedInfo) ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-amber-500/10 text-amber-600 border border-amber-500/30 shrink-0">
                       <Clock className="w-3.5 h-3.5 animate-pulse" /> Out on Rental
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                      <ShieldCheck className="w-3.5 h-3.5" /> In Stock ({product.available_quantity ?? product.quantity ?? 1} Available)
+                      <ShieldCheck className="w-3.5 h-3.5" /> In Stock ({product?.available_quantity ?? product?.quantity ?? 1} Available)
                     </span>
                   )}
                 </div>
@@ -370,7 +374,9 @@ const ProductDetailPage = () => {
               <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)]">
                 <div>
                   <span className="text-xs font-extrabold text-[var(--text)] block">Rental Quantity</span>
-                  <span className="text-[11px] text-[var(--text-muted)] font-medium">Units ({maxQuantity} in stock)</span>
+                  <span className="text-[11px] text-[var(--text-muted)] font-medium">
+                    Units ({product?.available_quantity ?? product?.quantity ?? maxQuantity} available)
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-1 shadow-xs">
                   <button 
@@ -405,13 +411,13 @@ const ProductDetailPage = () => {
               />
 
               {/* CTA Action Buttons (Amazon/Flipkart Style: Add to Cart + Rent Now) */}
-              {rentedInfo ? (
+              {(product?.available_quantity === 0 && rentedInfo) ? (
                 <div className="space-y-2">
                   <Button 
                     disabled
                     className="w-full justify-center py-3.5 text-sm font-extrabold rounded-2xl opacity-60 cursor-not-allowed"
                   >
-                    <Lock className="w-4 h-4 mr-2" /> Currently Rented ({rentedInfo.hours}h {rentedInfo.mins}m remaining)
+                    <Lock className="w-4 h-4 mr-2" /> Fully Booked — Unlocks in {rentedInfo.hours}h {rentedInfo.mins}m
                   </Button>
                   <Button
                     variant="outline"
