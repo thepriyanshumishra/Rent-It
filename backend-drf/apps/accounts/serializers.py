@@ -59,8 +59,7 @@ CustomTokenObtainPairSerializer = LoginSerializer
 class CustomerProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
-        fields = ('date_of_birth', 'loyalty_points')
-        read_only_fields = ('loyalty_points',)
+        fields = '__all__'
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
