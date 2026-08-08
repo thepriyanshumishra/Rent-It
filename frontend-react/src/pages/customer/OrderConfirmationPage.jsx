@@ -67,40 +67,154 @@ const OrderConfirmationPage = () => {
   const totalCharged = parseFloat(order.total_price || rentalFee + depositFee);
 
   const handleDownloadInvoice = () => {
-    const invoiceContent = `
-====================================================
-               RENTIT TAX INVOICE
-====================================================
-Invoice Ref  : ${order.order_number || orderId}
-Date         : ${new Date().toLocaleDateString('en-IN')}
-Status       : ACTIVE / CONFIRMED
-----------------------------------------------------
-Customer Name: ${order.user?.name || order.address?.name || 'Valued Customer'}
-Delivery Addr: ${typeof order.address === 'string' ? order.address : `${order.address?.line1 || 'B-104 Tech Park'}, ${order.address?.city || 'Noida'}`}
-----------------------------------------------------
-Item Rented  : ${productName}
-Rental Period: ${startDate} to ${endDate}
-Fulfillment  : Express Doorstep Delivery
-----------------------------------------------------
-Rental Fee   : ₹${rentalFee.toLocaleString('en-IN')}
-Escrow Deposit: ₹${depositFee.toLocaleString('en-IN')}
-----------------------------------------------------
-TOTAL PAID   : ₹${totalCharged.toLocaleString('en-IN')}
-====================================================
-Thank you for renting with RentIt Platform!
-    `.trim();
+    const invNumber = order.order_number || orderId || `RNT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    const custName = order.user?.name || order.address?.name || 'Valued Customer';
+    const custPhone = order.address?.phone || '+91 98765 43210';
+    const custAddr = typeof order.address === 'string' ? order.address : `${order.address?.line1 || 'B-104 Tech Park'}, ${order.address?.city || 'Noida'}, ${order.address?.state || 'UP'} - ${order.address?.zip || '201309'}`;
+    
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast.error('Popup blocked! Please allow popups to save/download PDF invoice.');
+      return;
+    }
 
-    const blob = new Blob([invoiceContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `RentIt_Invoice_${order.order_number || orderId}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>RentIt_Tax_Invoice_${invNumber}.pdf</title>
+        <style>
+          @page { size: A4; margin: 15mm; }
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #0f172a; margin: 0; padding: 24px; background: #fff; }
+          .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 24px; }
+          .logo { font-size: 28px; font-weight: 900; color: #6366f1; letter-spacing: -1px; }
+          .logo-sub { font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+          .inv-title { font-size: 22px; font-weight: 900; text-align: right; color: #0f172a; }
+          .inv-meta { font-size: 12px; color: #475569; text-align: right; margin-top: 4px; }
+          .badge { display: inline-block; padding: 4px 12px; background: #dcfce7; color: #166534; font-size: 11px; font-weight: 800; border-radius: 99px; margin-top: 8px; }
+          
+          .grid { display: flex; justify-content: space-between; margin-bottom: 28px; gap: 20px; }
+          .box { flex: 1; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; font-size: 12px; }
+          .box-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 8px; tracking: 0.5px; }
+          .box-content { font-weight: 600; line-height: 1.6; color: #334155; }
 
-    toast.success('Tax Invoice downloaded successfully!');
+          table { width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 12px; }
+          th { background: #f1f5f9; color: #475569; text-align: left; padding: 12px; font-weight: 800; text-transform: uppercase; font-size: 11px; border-bottom: 2px solid #cbd5e1; }
+          td { padding: 14px 12px; border-bottom: 1px solid #e2e8f0; font-weight: 600; }
+          .text-right { text-align: right; }
+
+          .summary-wrapper { display: flex; justify-content: flex-end; margin-bottom: 28px; }
+          .summary-box { width: 320px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; font-size: 12px; }
+          .summary-line { display: flex; justify-content: space-between; padding: 6px 0; font-weight: 600; color: #475569; }
+          .summary-grand { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 8px; border-top: 2px solid #6366f1; font-weight: 900; font-size: 18px; color: #6366f1; }
+
+          .escrow-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; font-size: 11px; color: #1e40af; font-weight: 600; margin-bottom: 28px; line-height: 1.5; }
+
+          .footer { border-top: 1px solid #e2e8f0; padding-top: 18px; font-size: 10px; color: #94a3b8; text-align: center; line-height: 1.6; }
+        </style>
+      </head>
+      <body>
+        <div className="header">
+          <div>
+            <div className="logo">RentIt</div>
+            <div className="logo-sub">Enterprise Equipment Rental Platform</div>
+          </div>
+          <div>
+            <div className="inv-title">TAX INVOICE</div>
+            <div className="inv-meta">Invoice Ref: <strong>${invNumber}</strong></div>
+            <div className="inv-meta">Date: ${dateStr}</div>
+            <div style="text-align: right;"><span className="badge">✓ PAID & RESERVED</span></div>
+          </div>
+        </div>
+
+        <div className="grid">
+          <div className="box">
+            <div className="box-title">Customer & Delivery Details</div>
+            <div className="box-content">
+              <strong>${custName}</strong><br/>
+              Phone: ${custPhone}<br/>
+              Address: ${custAddr}
+            </div>
+          </div>
+          <div className="box">
+            <div className="box-title">Rental Period & Fulfillment</div>
+            <div className="box-content">
+              <strong>Express Doorstep Delivery</strong><br/>
+              Start Date: ${startDate}<br/>
+              Return Deadline: ${endDate} (11:59 PM)
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Equipment Description</th>
+              <th>Rental Period</th>
+              <th>Fulfillment</th>
+              <th className="text-right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>${productName}</strong></td>
+              <td>${startDate} to ${endDate}</td>
+              <td>Doorstep Pickup & Delivery</td>
+              <td className="text-right">₹${rentalFee.toLocaleString('en-IN')}</td>
+            </tr>
+            <tr>
+              <td><strong>Refundable Security Deposit (Escrow Vault)</strong></td>
+              <td>100% Refundable on Return</td>
+              <td>RentIt Escrow Protected</td>
+              <td className="text-right">₹${depositFee.toLocaleString('en-IN')}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div className="summary-wrapper">
+          <div className="summary-box">
+            <div className="summary-line">
+              <span>Rental Charge Subtotal</span>
+              <span>₹${rentalFee.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="summary-line">
+              <span>Escrow Security Deposit</span>
+              <span>₹${depositFee.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="summary-line">
+              <span>Doorstep Delivery & Handling</span>
+              <span style="color: #16a34a; font-weight: 800;">FREE</span>
+            </div>
+            <div className="summary-grand">
+              <span>TOTAL PAID</span>
+              <span>₹${totalCharged.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="escrow-banner">
+          🔒 <strong>RentIt Escrow Guarantee:</strong> Your security deposit of ₹${depositFee.toLocaleString('en-IN')} is safely locked in escrow and will be refunded automatically to your payment method within 24 hours of return inspection.
+        </div>
+
+        <div className="footer">
+          RentIt Platform Pvt Ltd • GSTIN: 07AAAAA0000A1Z5 • Support: support@rentit.com • +91 1800 123 4567<br/>
+          This document serves as an official tax invoice & escrow payment receipt. System generated document.
+        </div>
+
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+            }, 300);
+          };
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    toast.success('Tax Invoice PDF dialog generated! Choose "Save as PDF".');
   };
 
   return (
