@@ -8,86 +8,7 @@ import Button from '../../components/ui/Button';
 import Select from '../../components/ui/Select';
 import * as productsApi from '../../api/products';
 
-const sampleFleetCatalog = [
-  {
-    id: 101,
-    name: 'Sony FX3 Cinema Camera Kit',
-    slug: 'sony-fx3-cinema-camera-kit',
-    category_name: 'Cameras & Video',
-    price: 2500,
-    security_deposit: 10000,
-    short_description: 'Full-frame cinema camera with XLR handle unit, 2x 160GB CFexpress cards, and FE 24-70mm GM II lens.',
-    primary_image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
-    is_featured: true,
-    rating: 4.9,
-    review_count: 28
-  },
-  {
-    id: 102,
-    name: 'Apple MacBook Pro 16" M3 Max',
-    slug: 'apple-macbook-pro-16-m3-max',
-    category_name: 'Electronics',
-    price: 3000,
-    security_deposit: 15000,
-    short_description: '36GB Unified Memory, 1TB SSD, 16-core CPU & 40-core GPU. Liquid Retina XDR Display for heavy 8K rendering.',
-    primary_image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80',
-    is_featured: true,
-    rating: 5.0,
-    review_count: 42
-  },
-  {
-    id: 103,
-    name: 'Super73-RX Electric Adventure Bike',
-    slug: 'super73-rx-electric-bike',
-    category_name: 'Vehicles & E-Bikes',
-    price: 1800,
-    security_deposit: 5000,
-    short_description: '750W high-output motor, full dual suspension, inverted coil spring fork, and 40+ mile street battery range.',
-    primary_image: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=800&q=80',
-    is_featured: false,
-    rating: 4.8,
-    review_count: 19
-  },
-  {
-    id: 104,
-    name: 'DJI Inspire 3 Cinema Drone 8K',
-    slug: 'dji-inspire-3-cinema-drone-8k',
-    category_name: 'Cameras & Video',
-    price: 8000,
-    security_deposit: 25000,
-    short_description: 'Zenmuse X9-8K Air Gimbal Camera, dual-control flight station, Waypoint Pro 3D tracking, and 8K ProRes RAW recording.',
-    primary_image: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=800&q=80',
-    is_featured: true,
-    rating: 4.9,
-    review_count: 15
-  },
-  {
-    id: 105,
-    name: 'JBL PartyBox Ultimate PA System',
-    slug: 'jbl-partybox-ultimate-pa-system',
-    category_name: 'Audio & Sound',
-    price: 2000,
-    security_deposit: 8000,
-    short_description: '1100W RMS high-definition sound with Dolby Atmos spatial audio, synchronized multi-color light show, and wireless mics.',
-    primary_image: 'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=80',
-    is_featured: false,
-    rating: 4.7,
-    review_count: 31
-  },
-  {
-    id: 106,
-    name: 'Apple Vision Pro 512GB VR Headset',
-    slug: 'apple-vision-pro-512gb',
-    category_name: 'Electronics',
-    price: 4000,
-    security_deposit: 20000,
-    short_description: 'Spatial computing headset with dual micro-OLED 4K displays, M2+R1 dual chips, and Solo Knit + Dual Loop Bands.',
-    primary_image: 'https://images.unsplash.com/photo-1593508512255-86ab42a8e620?auto=format&fit=crop&w=800&q=80',
-    is_featured: true,
-    rating: 4.9,
-    review_count: 36
-  }
-];
+
 
 const ExplorePage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -129,7 +50,7 @@ const ExplorePage = () => {
     updateFilter('search', searchTermInput);
   };
 
-  // Combine real backend items with sample fleet catalog items if backend items count is low
+  // Parse real backend items from API
   let rawApiItems = Array.isArray(productsData?.data)
     ? productsData.data
     : Array.isArray(productsData?.data?.results)
@@ -139,18 +60,10 @@ const ExplorePage = () => {
     : [];
 
   // Filter out any invalid null items
-  rawApiItems = rawApiItems.filter(Boolean);
+  let filteredItems = rawApiItems.filter(Boolean);
 
-  // Merge sample products so the storefront looks rich & complete
-  let combinedItems = [...rawApiItems];
-  sampleFleetCatalog.forEach(sample => {
-    if (!combinedItems.some(item => item.id === sample.id || item.slug === sample.slug)) {
-      combinedItems.push(sample);
-    }
-  });
-
-  // Apply frontend filtering
-  let filteredItems = combinedItems.filter(item => {
+  // Apply frontend category and search filtering
+  filteredItems = filteredItems.filter(item => {
     const matchesCat = !categoryParam || categoryParam === 'All Categories' || 
       (item.category_name || item.category?.name || '')?.toLowerCase().includes(categoryParam.toLowerCase());
     const matchesSearch = !searchParam || 

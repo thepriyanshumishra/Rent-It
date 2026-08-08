@@ -59,6 +59,9 @@ const ProductCard = ({ product }) => {
     return desc;
   };
 
+  const availableQty = Number(product.available_quantity ?? product.quantity ?? 0);
+  const isInStock = availableQty > 0;
+
   return (
     <motion.div 
       className="group relative flex flex-col bg-[var(--bg-elevated)] border border-[var(--border)] rounded-3xl overflow-hidden cursor-pointer transition-all duration-300 hover:border-[var(--accent)] hover:shadow-2xl hover:shadow-[var(--accent)]/10"
@@ -74,11 +77,17 @@ const ProductCard = ({ product }) => {
         </div>
       )}
 
-      {/* Stock Status Badge */}
+      {/* Dynamic Stock Status Badge */}
       <div className="absolute top-3.5 right-3.5 z-10">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/90 text-white shadow-md backdrop-blur-md">
-          <ShieldCheck className="w-3 h-3" /> In Stock
-        </span>
+        {isInStock ? (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-500/90 text-white shadow-md backdrop-blur-md">
+            <ShieldCheck className="w-3 h-3" /> In Stock ({availableQty})
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-red-500/90 text-white shadow-md backdrop-blur-md">
+            Out of Stock
+          </span>
+        )}
       </div>
 
       {/* Product Image Container */}
@@ -129,13 +138,20 @@ const ProductCard = ({ product }) => {
 
           <Button 
             size="sm" 
-            className="rounded-xl px-4 py-2 text-xs font-black shadow-sm flex items-center gap-1 group-hover:bg-[var(--accent-hover)]"
+            disabled={!isInStock}
+            className={`rounded-xl px-4 py-2 text-xs font-black shadow-sm flex items-center gap-1 ${
+              isInStock ? 'group-hover:bg-[var(--accent-hover)]' : 'opacity-50 cursor-not-allowed'
+            }`}
             onClick={(e) => { 
               e.stopPropagation(); 
-              navigate(`/product/${slug || id}`); 
+              if (isInStock) navigate(`/product/${slug || id}`); 
             }}
           >
-            Rent Now <ArrowUpRight size={14} />
+            {isInStock ? (
+              <>Rent Now <ArrowUpRight size={14} /></>
+            ) : (
+              'Out of Stock'
+            )}
           </Button>
         </div>
       </div>
