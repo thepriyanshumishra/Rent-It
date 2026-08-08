@@ -4,8 +4,8 @@ import { AuthContext } from '../../context/AuthContext';
 import { CartContext } from '../../context/CartContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { 
-  ShoppingBag, User, LogOut, Sun, Moon, Sparkles, 
-  ShieldCheck, Package, ChevronDown, PlusCircle, Compass, Grid
+  ShoppingBag, LogOut, Sun, Moon, Sparkles, 
+  Package, Compass, Grid
 } from 'lucide-react';
 import Button from '../ui/Button';
 
@@ -16,12 +16,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isRenter = user?.role === 'RENTER';
-  const isAdmin = user?.role === 'ADMIN' || user?.is_staff || user?.is_superuser;
-
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg)]/90 backdrop-blur-md border-b border-[var(--border)] transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between relative">
         
         {/* Left: Brand Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -38,8 +35,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Center: Main Navigation */}
-        <div className="hidden md:flex items-center gap-1.5 bg-[var(--bg-elevated)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xs">
+        {/* Center: Main Navigation Pills (Exact Horizontal Center) */}
+        <div className="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center gap-1.5 bg-[var(--bg-elevated)] p-1.5 rounded-2xl border border-[var(--border)] shadow-xs">
           <Link 
             to="/explore" 
             className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
@@ -104,21 +101,6 @@ export default function Navbar() {
               )}
             </Link>
           )}
-
-          {/* Become a Renter Button */}
-          {!isAuthenticated ? (
-            <Link to="/become-a-renter" className="hidden lg:block">
-              <Button variant="outline" size="sm" className="rounded-2xl font-bold text-xs">
-                List Equipment & Earn
-              </Button>
-            </Link>
-          ) : user?.role === 'CUSTOMER' ? (
-            <Link to="/become-a-renter" className="hidden lg:block">
-              <Button variant="outline" size="sm" className="rounded-2xl font-bold text-xs flex items-center gap-1.5">
-                <PlusCircle className="w-4 h-4 text-[var(--accent)]" /> List Equipment
-              </Button>
-            </Link>
-          ) : null}
 
           {/* User Auth Buttons */}
           {!isAuthenticated ? (
