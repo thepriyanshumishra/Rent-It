@@ -103,7 +103,7 @@ const ProductCard = ({ product }) => {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center text-text-muted bg-gradient-to-br from-indigo-500/10 to-purple-500/10 p-4 text-center">
+          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--text-muted)] bg-[var(--bg-subtle)] p-4 text-center">
             <Package className="w-10 h-10 text-accent/60 mb-2" />
             <span className="text-xs font-bold text-text-secondary line-clamp-1">{name}</span>
           </div>

@@ -60,12 +60,12 @@ const HomePage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <span className="text-text">Rent what you need.</span><br/>
-            <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-500 bg-clip-text text-transparent">Only when you need it.</span>
+            <span className="text-[var(--text)]">Rent what you need.</span><br/>
+            <span className="text-[var(--accent)]">Only when you need it.</span>
           </motion.h1>
           
           <motion.p 
-            className="text-base sm:text-lg text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
+            className="text-base sm:text-lg text-[var(--text-secondary)] max-w-2xl mx-auto mb-10 leading-relaxed font-medium"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
@@ -76,56 +76,54 @@ const HomePage = () => {
           {/* Odoo Rentals Inspired Interactive Booking Bar */}
           <motion.form
             onSubmit={handleQuickSearch}
-            className="w-full max-w-4xl bg-bg-elevated border border-border rounded-3xl p-3 sm:p-4 shadow-2xl mb-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-left"
+            className="w-full max-w-4xl bg-[var(--bg-elevated)] border border-[var(--border)] rounded-2xl p-3 sm:p-4 shadow-xl mb-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-left"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <div className="flex flex-col gap-1 p-2.5 rounded-2xl bg-bg-subtle border border-border-subtle">
-              <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Search className="w-3 h-3 text-accent" /> Search Item
+            <div className="flex flex-col gap-1 p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-strong)]">
+              <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <Search className="w-3.5 h-3.5 text-[var(--accent)]" /> Search Item
               </label>
               <input
                 type="text"
                 placeholder="Camera, Laptop, E-Bike..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-transparent text-sm text-text font-semibold outline-none placeholder:text-text-muted/60"
+                className="bg-transparent text-sm text-[var(--text)] font-semibold outline-none border-0 p-0 shadow-none focus:ring-0 placeholder:text-[var(--text-muted)]"
               />
             </div>
 
-            <div className="flex flex-col gap-1 p-2.5 rounded-2xl bg-bg-subtle border border-border-subtle">
-              <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-accent" /> Pick-up Date
+            <div className="flex flex-col gap-1 p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-strong)]">
+              <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[var(--accent)]" /> Pick-up Date
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-sm text-text font-semibold outline-none cursor-pointer"
+                className="bg-transparent text-sm text-[var(--text)] font-semibold outline-none border-0 p-0 shadow-none focus:ring-0 cursor-pointer"
               />
             </div>
 
-            <div className="flex flex-col gap-1 p-2.5 rounded-2xl bg-bg-subtle border border-border-subtle">
-              <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-accent" /> Return Date
+            <div className="flex flex-col gap-1 p-3 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-strong)]">
+              <label className="text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[var(--accent)]" /> Return Date
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-sm text-text font-semibold outline-none cursor-pointer"
+                className="bg-transparent text-sm text-[var(--text)] font-semibold outline-none border-0 p-0 shadow-none focus:ring-0 cursor-pointer"
               />
             </div>
 
-            <Button
+            <button
               type="submit"
-              variant="primary"
-              size="lg"
-              className="h-full w-full rounded-2xl font-bold flex items-center justify-center gap-2 shadow-md hover:shadow-lg py-3 text-sm"
+              className="btn-primary h-full w-full rounded-xl font-bold flex items-center justify-center gap-2 py-3 text-sm"
             >
               <Search className="w-4 h-4" /> Find Available
-            </Button>
+            </button>
           </motion.form>
 
           <motion.div 
