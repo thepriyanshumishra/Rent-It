@@ -49,7 +49,7 @@ const HomePage = () => {
       {/* Section 1: Hero */}
       <section className="relative min-h-[85vh] flex flex-col justify-center overflow-hidden pt-12 pb-16 px-4">
         {/* Subtle decorative radial light pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.12)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--accent-subtle)_0%,transparent_65%)] pointer-events-none" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-15 pointer-events-none" />
         
         <div className="relative z-10 flex flex-col items-center text-center max-w-5xl mx-auto">

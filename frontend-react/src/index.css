@@ -75,23 +75,24 @@
 
 /* Clean Dark Mode (Odoo Enterprise Dark) */
 [data-theme="dark"] {
-  --bg: #0F172A;
-  --bg-elevated: #1E293B;
-  --bg-subtle: #334155;
-  --bg-overlay: #1E293B;
+  --bg: #0E1420;
+  --bg-elevated: #172033;
+  --bg-subtle: #1E293D;
+  --bg-overlay: #172033;
 
-  --border: #334155;
-  --border-subtle: #1E293B;
-  --border-strong: #475569;
+  --border: #2A364F;
+  --border-subtle: #172033;
+  --border-strong: #3B4C6B;
 
   --text: #F8FAFC;
   --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
+  --text-muted: #8E9BAE;
 
-  --accent: #A855F7;
-  --accent-hover: #C084FC;
-  --accent-subtle: rgba(168, 85, 247, 0.15);
-  --accent-subtle-hover: rgba(168, 85, 247, 0.25);
+  /* Signature Odoo Plum Accent (Vibrant Plum for Dark Mode) */
+  --accent: #8E5E82;
+  --accent-hover: #9C6990;
+  --accent-subtle: rgba(142, 94, 130, 0.2);
+  --accent-subtle-hover: rgba(142, 94, 130, 0.32);
 
   --teal: #14B8A6;
   --teal-subtle: rgba(20, 184, 166, 0.15);
