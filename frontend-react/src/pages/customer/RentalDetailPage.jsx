@@ -11,6 +11,7 @@ import PriceDisplay from '../../components/ui/PriceDisplay';
 import Skeleton from '../../components/ui/Skeleton';
 import * as rentalsApi from '../../api/rentals';
 import * as invoicesApi from '../../api/invoices';
+import { toast } from '../../components/ui/Toast';
 
 const sampleProductMap = {
   1: { name: 'Sony FX3 Cinema Camera Kit', price: 2500, deposit: 10000, category: 'Cameras & Video' },
