@@ -142,7 +142,7 @@ const OrderConfirmationPage = () => {
           <Button 
             variant="secondary" 
             className="rounded-xl font-bold flex items-center justify-center gap-2"
-            onClick={() => invoicesApi.downloadInvoice(orderId)}
+            onClick={handleDownloadInvoice}
           >
             <Download className="w-4 h-4" /> Download Invoice
           </Button>

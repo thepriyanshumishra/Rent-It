@@ -16,18 +16,22 @@ const sampleProductMap = {
 };
 
 const getItemPrice = (item) => {
-  const p = parseFloat(item.product?.price || item.price || 0);
+  const p = parseFloat(item.product?.price ?? item.price ?? 0);
   if (p > 0) return p;
-  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id] || sampleProductMap[3];
-  return fallback.price;
+  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id];
+  return fallback ? fallback.price : 0;
 };
 
 const getItemDeposit = (item) => {
+  const prodDep = item.product?.security_deposit ?? item.security_deposit ?? item.securityDeposit;
+  if (prodDep !== undefined && prodDep !== null && !isNaN(parseFloat(prodDep))) {
+    return parseFloat(prodDep);
+  }
   const firstPricing = item.product?.pricings?.[0];
-  const d = parseFloat(firstPricing?.security_deposit || item.securityDeposit || 0);
+  const d = parseFloat(firstPricing?.security_deposit || 0);
   if (d > 0) return d;
-  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id] || sampleProductMap[3];
-  return fallback.deposit;
+  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id];
+  return fallback ? fallback.deposit : 0;
 };
 
 const CartSummary = ({ cart, loading, onCheckout }) => {

@@ -68,23 +68,34 @@ const Navbar = () => {
             <Building2 className="w-4 h-4" /> Businesses
           </Link>
           
-          <Link 
-            to="/my-rentals"
-            className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
-              location.pathname.startsWith('/my-rentals') 
-                ? 'bg-[var(--accent)] text-white shadow-sm' 
-                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
-            }`}
-          >
-            <Package className="w-4 h-4" /> My Rentals
-          </Link>
+          {isAuthenticated && (
+            <Link 
+              to="/my-rentals"
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
+                location.pathname.startsWith('/my-rentals') 
+                  ? 'bg-[var(--accent)] text-white shadow-sm' 
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
+              }`}
+            >
+              <Package className="w-4 h-4" /> My Rentals
+            </Link>
+          )}
+
+          {user?.role === 'RENTER' && (
+            <Link 
+              to="/renter/dashboard"
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent-subtle-hover)]`}
+            >
+              <Sparkles className="w-4 h-4" /> Renter Portal (60%)
+            </Link>
+          )}
 
           {(isAdmin || isMerchant) && (
             <Link 
               to="/admin/dashboard"
               className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent-subtle-hover)]`}
             >
-              <LayoutDashboard className="w-4 h-4" /> Merchant Portal
+              <LayoutDashboard className="w-4 h-4" /> HQ Admin Portal
             </Link>
           )}
         </nav>
@@ -176,9 +187,11 @@ const Navbar = () => {
             <Link to="/businesses" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
               <Building2 className="w-5 h-5 text-[var(--accent)]" /> Business Bulk Orders
             </Link>
-            <Link to="/my-rentals" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
-              <Package className="w-5 h-5 text-[var(--accent)]" /> My Rentals
-            </Link>
+            {isAuthenticated && (
+              <Link to="/my-rentals" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
+                <Package className="w-5 h-5 text-[var(--accent)]" /> My Rentals
+              </Link>
+            )}
             {isAdmin && (
               <Link to="/admin" className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold">
                 <LayoutDashboard className="w-5 h-5" /> Admin Operations Portal

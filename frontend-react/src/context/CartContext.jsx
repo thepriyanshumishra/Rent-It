@@ -76,7 +76,8 @@ export const CartProvider = ({ children }) => {
           product: productObj,
           quantity: qty,
           start_date: itemData?.startDate,
-          end_date: itemData?.endDate
+          end_date: itemData?.endDate,
+          securityDeposit: productObj?.security_deposit ?? itemData?.securityDeposit
         });
       }
       return { ...prevCart, items: newItems };

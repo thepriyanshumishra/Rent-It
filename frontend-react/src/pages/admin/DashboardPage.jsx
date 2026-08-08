@@ -1,112 +1,143 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { RefreshCw, FileText, Clock, Truck, DollarSign } from 'lucide-react';
 import MetricRow from '../../components/admin/MetricRow';
 import OperationsTable from '../../components/admin/OperationsTable';
 import RevenueChart from '../../components/admin/RevenueChart';
 import AttentionItems from '../../components/admin/AttentionItems';
-import { useQuery } from '@tanstack/react-query';
-import { RefreshCw } from 'lucide-react';
 import Button from '../../components/ui/Button';
-
-// Mock API functions (replace with actual API imports later)
-const fetchDashboardMetrics = async () => {
-  return [
-    { title: 'Active Rentals', value: '42', icon: 'file-text', color: 'var(--accent)' },
-    { title: 'Due Today', value: '5', icon: 'clock', color: 'var(--warning)' },
-    { title: 'Upcoming Pickups', value: '8', icon: 'truck', color: 'var(--info)' },
-    { title: 'Upcoming Returns', value: '3', icon: 'rotate-ccw', color: 'var(--success)' },
-    { title: 'Overdue', value: '2', icon: 'alert-triangle', color: 'var(--danger)' },
-    { title: 'Revenue This Month', value: '₹1,24,500', icon: 'dollar-sign', color: 'var(--success)' }
-  ];
-};
-
-const fetchTodayOperations = async () => {
-  return [
-    { id: 1, time: '10:00 AM', customerName: 'John Doe', productName: 'Sony A7III', type: 'pickup', status: 'pending', rentalId: 101 },
-    { id: 2, time: '11:30 AM', customerName: 'Jane Smith', productName: 'Canon 24-70mm', type: 'return', status: 'completed', rentalId: 102 },
-    { id: 3, time: '02:00 PM', customerName: 'Mike Johnson', productName: 'DJI Ronin', type: 'overdue', status: 'pending', rentalId: 103 },
-  ];
-};
-
-const fetchRevenueData = async () => {
-  return Array.from({length: 14}).map((_, i) => ({
-    date: `Aug ${i+1}`,
-    revenue: Math.floor(Math.random() * 5000) + 1000
-  }));
-};
-
-const fetchAttentionItems = async () => {
-  return [
-    { type: 'overdue', title: '2 Rentals Overdue', description: 'Order #1042 and #1045 are past their return date.', link: '/admin/rentals?status=overdue' },
-    { type: 'pending_returns', title: '3 Pending Returns', description: 'Items awaiting inspection and return processing.', link: '/admin/rentals?status=return_pending' },
-    { type: 'low_inventory', title: 'Low Inventory', description: 'SD Cards (64GB) are running out of stock.', link: '/admin/inventory' }
-  ];
-};
+import api from '../../api/axios';
 
 export default function DashboardPage() {
-  const { data: metrics, isLoading: loadingMetrics, refetch: refetchMetrics } = useQuery({
-    queryKey: ['admin-metrics'],
-    queryFn: fetchDashboardMetrics
+  const { data: rentalsRaw, isLoading: loadingRentals, refetch: refetchRentals } = useQuery({
+    queryKey: ['admin-rentals'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/rentals/');
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.results)) return data.results;
+        return [];
+      } catch (e) {
+        return [];
+      }
+    }
   });
 
-  const { data: operations, isLoading: loadingOps, refetch: refetchOps } = useQuery({
-    queryKey: ['admin-operations'],
-    queryFn: fetchTodayOperations
+  const { data: listingReqsRaw, isLoading: loadingReqs, refetch: refetchReqs } = useQuery({
+    queryKey: ['admin-listing-requests'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/listing-requests/');
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.results)) return data.results;
+        return [];
+      } catch (e) {
+        return [];
+      }
+    }
   });
 
-  const { data: revenueData, isLoading: loadingRev, refetch: refetchRev } = useQuery({
-    queryKey: ['admin-revenue'],
-    queryFn: fetchRevenueData
+  const { data: productsRaw, isLoading: loadingProducts, refetch: refetchProducts } = useQuery({
+    queryKey: ['admin-products'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/products/');
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.results)) return data.results;
+        return [];
+      } catch (e) {
+        return [];
+      }
+    }
   });
 
-  const { data: attentionItems, isLoading: loadingAttn, refetch: refetchAttn } = useQuery({
-    queryKey: ['admin-attention'],
-    queryFn: fetchAttentionItems
-  });
+  const rentalsData = Array.isArray(rentalsRaw) ? rentalsRaw : [];
+  const listingReqs = Array.isArray(listingReqsRaw) ? listingReqsRaw : [];
+  const products = Array.isArray(productsRaw) ? productsRaw : [];
 
   const handleRefresh = () => {
-    refetchMetrics();
-    refetchOps();
-    refetchRev();
-    refetchAttn();
+    refetchRentals();
+    refetchReqs();
+    refetchProducts();
   };
+
+  const activeRentalsCount = rentalsData.filter(r => r && r.status === 'ACTIVE').length;
+  const pendingInspectionCount = listingReqs.filter(r => r && r.status === 'PENDING_VERIFICATION').length;
+  const liveStorefrontCount = products.filter(p => p && p.is_active).length;
+  const totalRevenue = rentalsData
+    .filter(r => r && (r.payment_status === 'PAID' || r.status === 'COMPLETED'))
+    .reduce((sum, r) => sum + Number(r.total_amount || r.total || 0), 0);
+
+  const metrics = [
+    { title: 'Active Rentals', label: 'Active Rentals', value: String(activeRentalsCount), icon: FileText, color: 'var(--accent)' },
+    { title: 'Pending Verification', label: 'Pending Verification', value: String(pendingInspectionCount), icon: Clock, color: 'var(--warning)' },
+    { title: 'Live Storefront Fleet', label: 'Live Storefront Fleet', value: String(liveStorefrontCount), icon: Truck, color: 'var(--info)' },
+    { title: 'Total Revenue', label: 'Total Revenue', value: `₹${totalRevenue.toLocaleString()}`, icon: DollarSign, color: 'var(--success)' }
+  ];
+
+  const operations = rentalsData.map(r => ({
+    id: r.id,
+    time: new Date(r.created_at || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    customerName: r.customer_name || r.user_email || 'Customer',
+    productName: r.items?.[0]?.product_name || 'Equipment',
+    type: r.status === 'ACTIVE' ? 'pickup' : 'return',
+    status: (r.status || 'pending').toLowerCase(),
+    rentalId: r.id
+  }));
+
+  const revenueData = [
+    { date: 'Today', revenue: totalRevenue }
+  ];
+
+  const attentionItems = [
+    ...(pendingInspectionCount > 0 ? [{
+      type: 'pending_returns',
+      title: `${pendingInspectionCount} Renter Request(s) Pending Verification`,
+      description: 'Items awaiting physical inspection and tax invoice approval.',
+      link: '/admin/listing-requests'
+    }] : [])
+  ];
+
+  const isLoading = loadingRentals || loadingReqs || loadingProducts;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center pb-2">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--text)]">Dashboard</h2>
-          <p className="text-[var(--text-muted)]">{new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <h2 className="text-2xl font-black text-[var(--text)] tracking-tight">HQ Operations Dashboard</h2>
+          <p className="text-xs text-[var(--text-muted)] font-semibold mt-0.5">
+            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
-          <RefreshCw size={16} /> Refresh
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 font-bold rounded-xl">
+          <RefreshCw size={15} /> Refresh Data
         </Button>
       </div>
 
-      <MetricRow metrics={metrics} loading={loadingMetrics} />
+      <MetricRow metrics={metrics} loading={isLoading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="h-[400px]">
-          <h3 className="text-lg font-semibold text-[var(--text)] mb-4">Today's Operations</h3>
-          <div className="h-[calc(100%-2rem)]">
-             <OperationsTable operations={operations} loading={loadingOps} />
+          <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-secondary)] mb-3">Today's Operations</h3>
+          <div className="h-[calc(100%-2.25rem)]">
+            <OperationsTable operations={operations} loading={isLoading} />
           </div>
         </div>
         <div className="h-[400px]">
-           <RevenueChart data={revenueData} loading={loadingRev} period="month" />
+          <h3 className="text-sm font-black uppercase tracking-wider text-[var(--text-secondary)] mb-3">Revenue Performance</h3>
+          <div className="h-[calc(100%-2.25rem)]">
+            <RevenueChart data={revenueData} loading={isLoading} period="month" />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 h-[350px]">
-          {/* We could put something else here, or expand the chart. For now, empty placeholder or another widget. */}
-          <div className="bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-5 h-full flex items-center justify-center">
-             <p className="text-[var(--text-muted)]">More widgets coming soon...</p>
+      {attentionItems.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-3">
+            <AttentionItems items={attentionItems} loading={isLoading} />
           </div>
         </div>
-        <div className="h-[350px]">
-          <AttentionItems items={attentionItems} loading={loadingAttn} />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

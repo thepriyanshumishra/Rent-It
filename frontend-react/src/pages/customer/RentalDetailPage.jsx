@@ -208,8 +208,26 @@ const RentalDetailPage = () => {
                   <p className="text-xs text-text-muted text-center max-w-xs mb-6 leading-relaxed">
                     Download official tax invoice with deposit breakdown and order receipt.
                   </p>
-                  <Button size="lg" className="rounded-xl font-bold px-6 shadow-md" onClick={() => invoicesApi.downloadInvoice(orderId)}>
-                    Download PDF Invoice
+                  <Button size="lg" className="rounded-xl font-bold px-6 shadow-md" onClick={async () => {
+                    try {
+                      toast.info('Generating tax invoice...');
+                      const res = await invoicesApi.downloadInvoice(orderId);
+                      const blob = new Blob([res.data], { type: 'text/html' });
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.setAttribute('download', `RentIt-Invoice-${orderId}.html`);
+                      document.body.appendChild(link);
+                      link.click();
+                      link.remove();
+                      window.URL.revokeObjectURL(url);
+                      toast.success('Invoice downloaded successfully!');
+                    } catch (err) {
+                      console.warn('Invoice download warning', err);
+                      toast.error('Could not download invoice file.');
+                    }
+                  }}>
+                    Download Official Tax Invoice
                   </Button>
                 </div>
               )}

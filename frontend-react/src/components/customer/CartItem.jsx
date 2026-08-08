@@ -28,8 +28,15 @@ const CartItem = ({ item, onRemove }) => {
     imageUrl = typeof first === 'string' ? first : (first.url || first.image_url);
   }
 
-  const priceAmount = parseFloat(item.price || product.price || fallbackInfo.price);
-  const depositAmount = parseFloat(item.securityDeposit || product.pricings?.[0]?.security_deposit || fallbackInfo.deposit);
+  const priceAmount = parseFloat(item.price || product.price || fallbackInfo?.price || 0);
+  const depositAmount = parseFloat(
+    item.securityDeposit ?? 
+    item.security_deposit ?? 
+    product.security_deposit ?? 
+    product.pricings?.[0]?.security_deposit ?? 
+    fallbackInfo?.deposit ?? 
+    0
+  );
 
   return (
     <div className="flex flex-col sm:flex-row gap-4 py-4 border-b border-border last:border-b-0">

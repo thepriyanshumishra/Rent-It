@@ -1,23 +1,32 @@
-import React, { useState, useContext } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Eye, EyeOff, Sun, Moon, ArrowLeft, Lock, Mail, ShieldCheck, UserCheck, Sparkles, Store } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Sun, Moon, Sparkles, UserCheck } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
+import { ThemeContext } from '../../context/ThemeContext';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
-import { ThemeContext } from '../../context/ThemeContext';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  const { login } = useAuth();
-  const { theme, toggleTheme } = useContext(ThemeContext);
+  const { login, user } = useAuth();
+  const { theme, toggleTheme } = useContext(ThemeContext) || { theme: 'light', toggleTheme: () => {} };
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = location.state?.from?.pathname || '/';
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'ADMIN' || user.role === 'admin' || user.is_staff || user.is_superuser) {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'RENTER') {
+        navigate('/renter/dashboard', { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
@@ -33,12 +42,18 @@ const LoginPage = () => {
     setLoading(true);
     
     try {
-      const user = await login(formData);
-      toast.success(`Welcome back, ${user.first_name || user.email}!`);
-      if (user.role === 'ADMIN' || user.role === 'admin' || user.is_staff || user.is_superuser) {
+      const loggedInUser = await login(formData);
+      toast.success(`Welcome back, ${loggedInUser.first_name || loggedInUser.email}!`);
+      
+      const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
+      const isUserRenter = loggedInUser.role === 'RENTER' || loggedInUser.role === 'renter';
+
+      if (isUserAdmin) {
         navigate('/admin/dashboard', { replace: true });
+      } else if (isUserRenter) {
+        navigate('/renter/dashboard', { replace: true });
       } else {
-        navigate(from, { replace: true });
+        navigate(from !== '/' && from !== '/login' ? from : '/', { replace: true });
       }
     } catch (error) {
       console.error(error);
@@ -90,24 +105,31 @@ const LoginPage = () => {
             <p className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-wider mb-2 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Instant Demo Access
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-1.5">
               <button
                 type="button"
-                onClick={() => fillDemo('merchant@rentit.com', 'merchant123456')}
-                className="px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 flex items-center justify-center gap-1.5 transition-all"
+                onClick={() => fillDemo('renter@rentit.com', 'renter123456')}
+                className="px-2 py-2 rounded-xl text-[11px] font-extrabold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent-subtle-hover)] flex items-center justify-center gap-1 transition-all"
               >
-                <Store className="w-3.5 h-3.5" /> Merchant Demo
+                <Sparkles className="w-3 h-3" /> Renter
+              </button>
+              <button
+                type="button"
+                onClick={() => fillDemo('admin@rentit.com', 'admin123456')}
+                className="px-2 py-2 rounded-xl text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 flex items-center justify-center gap-1 transition-all"
+              >
+                <ShieldCheck className="w-3 h-3" /> HQ Admin
               </button>
               <button
                 type="button"
                 onClick={() => fillDemo('customer@rentit.com', 'customer123456')}
-                className="px-3 py-2 rounded-xl text-xs font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent-subtle-hover)] flex items-center justify-center gap-1.5 transition-all"
+                className="px-2 py-2 rounded-xl text-[11px] font-bold bg-[var(--bg-elevated)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--bg-subtle)] flex items-center justify-center gap-1 transition-all"
               >
-                <UserCheck className="w-3.5 h-3.5" /> Customer Demo
+                <UserCheck className="w-3 h-3" /> Customer
               </button>
             </div>
             <p className="text-[11px] text-[var(--text-muted)] text-center mt-2 font-medium">
-              HQ Super Admin? Log in via <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer" className="text-[var(--accent)] underline font-bold">Django Admin Panel</a>
+              HQ Super Admin? Also accessible via <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer" className="text-[var(--accent)] underline font-bold">Django Admin Panel</a>
             </p>
           </div>
 

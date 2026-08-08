@@ -1,23 +1,25 @@
 import React from 'react';
 import Skeleton from './Skeleton';
 
-const DataTable = ({ columns, data, loading, emptyText = 'No data available', onRowClick }) => {
+const DataTable = ({ columns, data, loading, emptyText = 'No data available', emptyMessage, onRowClick }) => {
+  const actualEmptyText = emptyMessage || emptyText;
+
   if (loading) {
     return (
       <div className="w-full overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-border">
+            <tr className="border-b border-[var(--border)]">
               {columns.map((col, i) => (
-                <th key={col.key || i} className="p-4 font-medium text-sm text-text-muted">
-                  {col.label}
+                <th key={col.key || col.accessor || i} className="p-4 font-medium text-sm text-[var(--text-muted)]">
+                  {col.label || col.header}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i} className="border-b border-border-subtle">
+              <tr key={i} className="border-b border-[var(--border-subtle)]">
                 {columns.map((col, j) => (
                   <td key={j} className="p-4">
                     <Skeleton className="h-4 w-full max-w-[100px]" />
@@ -33,24 +35,24 @@ const DataTable = ({ columns, data, loading, emptyText = 'No data available', on
 
   if (!data || data.length === 0) {
     return (
-      <div className="p-8 text-center text-text-muted border border-border-subtle rounded-lg">
-        {emptyText}
+      <div className="p-8 text-center text-[var(--text-muted)] border border-[var(--border-subtle)] rounded-lg">
+        {actualEmptyText}
       </div>
     );
   }
 
   return (
-    <div className="w-full overflow-x-auto border border-border rounded-lg bg-bg-elevated">
+    <div className="w-full overflow-x-auto border border-[var(--border)] rounded-lg bg-[var(--bg-elevated)]">
       <table className="w-full text-left border-collapse">
-        <thead className="bg-bg-subtle">
-          <tr className="border-b border-border">
+        <thead className="bg-[var(--bg-subtle)]">
+          <tr className="border-b border-[var(--border)]">
             {columns.map((col, i) => (
               <th 
-                key={col.key || i} 
-                className="p-4 font-medium text-sm text-text-muted whitespace-nowrap"
+                key={col.key || col.accessor || i} 
+                className="p-4 font-medium text-sm text-[var(--text-muted)] whitespace-nowrap"
                 style={{ width: col.width }}
               >
-                {col.label}
+                {col.label || col.header}
               </th>
             ))}
           </tr>
@@ -60,13 +62,24 @@ const DataTable = ({ columns, data, loading, emptyText = 'No data available', on
             <tr 
               key={row.id || i} 
               onClick={() => onRowClick && onRowClick(row)}
-              className={`border-b border-border-subtle last:border-0 hover:bg-bg-subtle transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+              className={`border-b border-[var(--border-subtle)] last:border-0 hover:bg-[var(--bg-subtle)] transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
             >
-              {columns.map((col, j) => (
-                <td key={col.key || j} className="p-4 text-sm text-text">
-                  {col.render ? col.render(row[col.key], row) : row[col.key]}
-                </td>
-              ))}
+              {columns.map((col, j) => {
+                const key = col.key || col.accessor;
+                const value = key ? row[key] : undefined;
+                let cellContent = value;
+                if (col.cell) {
+                  cellContent = col.cell(row, value);
+                } else if (col.render) {
+                  cellContent = col.render(value, row);
+                }
+
+                return (
+                  <td key={col.key || col.accessor || j} className="p-4 text-sm text-[var(--text)]">
+                    {cellContent}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>

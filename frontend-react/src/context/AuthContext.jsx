@@ -52,9 +52,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await logoutApi();
+      const refresh = localStorage.getItem('refreshToken');
+      // Send refresh token in body so backend can blacklist it
+      if (refresh) await logoutApi({ refresh_token: refresh });
     } catch (e) {
-      console.error(e);
+      // Logout should always succeed on the client side even if server errors
+      console.error('Logout server error (ignored):', e);
     } finally {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');

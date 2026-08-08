@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductVariant
+from .models import Category, Product, ProductImage, ProductVariant, RenterListingRequest
 from apps.pricing.models import ProductPricing, RentalPeriod
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -63,3 +63,14 @@ class ProductSerializer(serializers.ModelSerializer):
         if primary:
             return primary.image_url or (primary.image.url if primary.image else None)
         return None
+
+class RenterListingRequestSerializer(serializers.ModelSerializer):
+    category_name = serializers.ReadOnlyField(source='category.name')
+    renter_username = serializers.ReadOnlyField(source='renter.username')
+    renter_email = serializers.ReadOnlyField(source='renter.email')
+    renter_phone = serializers.ReadOnlyField(source='renter.phone_number')
+
+    class Meta:
+        model = RenterListingRequest
+        fields = '__all__'
+        read_only_fields = ('renter', 'status', 'approved_product', 'rejection_reason')

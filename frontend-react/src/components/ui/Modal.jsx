@@ -32,8 +32,14 @@ const Modal = ({
     md: 'max-w-md',
     lg: 'max-w-lg',
     xl: 'max-w-xl',
-    full: 'max-w-full m-4',
+    '2xl': 'max-w-2xl',
+    '3xl': 'max-w-3xl',
+    '4xl': 'max-w-4xl',
+    '5xl': 'max-w-5xl',
+    full: 'max-w-[95vw] m-4',
   };
+
+  const selectedSizeClass = sizeClasses[size] || (size.startsWith('max-w-') ? size : 'max-w-md');
 
   const modalContent = (
     <AnimatePresence>
@@ -43,7 +49,7 @@ const Modal = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-bg-overlay/80 backdrop-blur-sm"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
             onClick={onClose}
           />
           <motion.div
@@ -51,16 +57,16 @@ const Modal = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-            className={`card relative w-full ${sizeClasses[size]} p-6 shadow-2xl flex flex-col max-h-[90vh]`}
+            className={`card relative w-full ${selectedSizeClass} p-6 shadow-2xl flex flex-col max-h-[90vh] bg-[var(--bg-elevated)] border border-[var(--border)] rounded-3xl`}
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-center justify-between mb-4">
-              {title && <h2 className="text-xl font-semibold text-text">{title}</h2>}
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-[var(--border)]">
+              {title && <h2 className="text-xl font-black text-[var(--text)] tracking-tight">{title}</h2>}
               {!hideClose && (
                 <button
                   onClick={onClose}
-                  className="p-1 rounded-md text-text-muted hover:text-text hover:bg-bg-subtle transition-colors ml-auto"
+                  className="p-1.5 rounded-xl text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] transition-colors ml-auto border border-transparent hover:border-[var(--border)]"
                 >
                   <X className="h-5 w-5" />
                 </button>

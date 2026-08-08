@@ -56,7 +56,7 @@ export const authApi = {
 export const productsApi = {
   list: (params) => api.get('/products/', { params }),
   detail: (id) => api.get(`/products/${id}/`),
-  categories: () => api.get('/products/categories/'),
+  categories: () => api.get('/categories/'),
   availability: (id, startDate, endDate) =>
     api.get(`/products/${id}/availability/`, { params: { startDate, endDate } }),
 };
@@ -85,14 +85,20 @@ export const rentalsApi = {
 
 // ─── Admin ────────────────────────────────────────────────
 export const adminApi = {
-  dashboard: () => api.get('/admin/dashboard/'),
-  inventory: () => api.get('/admin/inventory/'),
-  updateInventoryStatus: (id, status) =>
-    api.patch(`/admin/inventory/${id}/`, { status }),
-  customers: () => api.get('/admin/customers/'),
-  returnRequests: () => api.get('/admin/return-requests/'),
+  // Real backend: GET /api/reports/dashboard/
+  dashboard: () => api.get('/reports/dashboard/'),
+  // Real backend: GET /api/inventory/items/
+  inventory: () => api.get('/inventory/items/'),
+  updateInventoryStatus: (id, data) =>
+    api.patch(`/inventory/items/${id}/`, data),
+  // Real backend: GET /api/auth/customers/
+  customers: () => api.get('/auth/customers/'),
+  // Real backend: GET /api/returns/ (pickups app)
+  returnRequests: () => api.get('/returns/'),
   processReturnRequest: (id, action) =>
-    api.post(`/admin/return-requests/${id}/${action}/`),
+    api.post(`/returns/${id}/${action}/`),
+  // Real backend: GET /api/reports/revenue/
+  revenueReport: () => api.get('/reports/revenue/'),
 };
 
 export default api;

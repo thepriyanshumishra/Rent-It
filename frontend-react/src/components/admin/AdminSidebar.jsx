@@ -4,24 +4,24 @@ import { motion } from 'framer-motion';
 import { 
   LayoutDashboard, FileText, Package, Archive, Users, Building2,
   DollarSign, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight,
-  QrCode, Truck, RotateCcw, Store
+  QrCode, Truck, RotateCcw, ShieldCheck, Sparkles
 } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 
 const navItems = [
-  { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Store Overview' },
+  { path: '/admin/dashboard', icon: LayoutDashboard, label: 'HQ Dashboard' },
+  { path: '/admin/listing-requests', icon: Sparkles, label: 'Renter Listing Requests' },
   { path: '/admin/rentals', icon: QrCode, label: 'Pickups & Orders' },
   { path: '/admin/business-orders', icon: Building2, label: 'B2B Inquiries' },
   { path: '/admin/products', icon: Package, label: 'Products & Fleet' },
-  { path: '/admin/inventory', icon: Archive, label: 'Store Inventory' },
-  { path: '/admin/customers', icon: Users, label: 'Local Customers' },
+  { path: '/admin/inventory', icon: Archive, label: 'HQ Inventory' },
+  { path: '/admin/customers', icon: Users, label: 'Customers' },
   { path: '/admin/finance', icon: DollarSign, label: 'Finances & Deposits' },
   { path: '/admin/reports', icon: BarChart2, label: 'Analytics' },
 ];
 
 export default function AdminSidebar({ collapsed, onToggle }) {
   const { user, logout } = useAuth();
-  const storeName = user?.merchant_profile?.store_name || 'Connaught Place Store';
 
   return (
     <motion.aside
@@ -33,9 +33,9 @@ export default function AdminSidebar({ collapsed, onToggle }) {
         {!collapsed && (
           <div className="flex flex-col">
             <span className="text-lg font-black text-[var(--text)] flex items-center gap-1.5">
-              <Store className="w-5 h-5 text-[var(--accent)]" /> Merchant Portal
+              <ShieldCheck className="w-5 h-5 text-[var(--accent)]" /> HQ Admin Portal
             </span>
-            <span className="text-[11px] font-bold text-[var(--accent)] truncate max-w-[170px]">{storeName}</span>
+            <span className="text-[11px] font-bold text-[var(--accent)] truncate">RentIt Headquarters</span>
           </div>
         )}
         <button 
@@ -51,6 +51,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
           <NavLink
             key={item.path}
             to={item.path}
+            end
             className={({ isActive }) => `
               flex items-center px-3 py-2.5 rounded-xl transition-all group relative font-medium text-sm
               ${isActive 
@@ -69,11 +70,11 @@ export default function AdminSidebar({ collapsed, onToggle }) {
       <div className="p-4 border-t border-[var(--border)]">
         <div className="flex items-center">
           <div className="w-9 h-9 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center font-black shrink-0">
-            {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'M'}
+            {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
           </div>
           {!collapsed && (
             <div className="ml-3 flex-1 overflow-hidden">
-              <p className="text-sm font-bold text-[var(--text)] truncate">{user?.full_name || 'Merchant Owner'}</p>
+              <p className="text-sm font-bold text-[var(--text)] truncate">{user?.full_name || 'HQ Admin'}</p>
               <p className="text-[11px] text-[var(--text-muted)] truncate">{user?.email}</p>
               <button 
                 onClick={logout}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Skeleton from '../ui/Skeleton';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function RevenueChart({ data = [], loading = false, period = 'month' }) {
   const [hoveredData, setHoveredData] = useState(null);
