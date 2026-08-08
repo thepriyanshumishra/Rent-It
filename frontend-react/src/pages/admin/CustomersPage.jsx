@@ -8,7 +8,7 @@ import api from '../../api/axios';
 export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: usersRaw = [], isLoading } = useQuery({
+  const { data: usersRaw = [], isLoading: loadingUsers } = useQuery({
     queryKey: ['admin-users-list'],
     queryFn: async () => {
       try {
@@ -22,10 +22,42 @@ export default function CustomersPage() {
     }
   });
 
-  const customers = Array.isArray(usersRaw) ? usersRaw : [];
+  const { data: allOrders = [], isLoading: loadingOrders } = useQuery({
+    queryKey: ['admin-rentals-all'],
+    queryFn: async () => {
+      try {
+        const { data } = await api.get('/rentals/orders/');
+        if (Array.isArray(data)) return data;
+        if (Array.isArray(data?.results)) return data.results;
+        return [];
+      } catch (e) {
+        return [];
+      }
+    }
+  });
+
+  // Merge placed orders from local storage
+  let localOrders = [];
+  try {
+    const stored = localStorage.getItem('rentos_placed_orders');
+    if (stored) localOrders = JSON.parse(stored);
+  } catch (e) {}
+
+  const mergedOrders = [...allOrders, ...localOrders];
+
+  const customers = (Array.isArray(usersRaw) ? usersRaw : []).map(u => {
+    const uOrders = mergedOrders.filter(o => String(o.user?.id || o.user) === String(u.id) || o.user?.email === u.email);
+    const totCount = Math.max(u.total_rentals || 0, uOrders.length);
+    const actCount = Math.max(u.active_rentals || 0, uOrders.filter(o => o.status === 'active' || o.status === 'ACTIVE' || o.status === 'CONFIRMED').length);
+    return {
+      ...u,
+      total_rentals: totCount,
+      active_rentals: actCount
+    };
+  });
 
   const filtered = customers.filter(c => 
-    (c.name || c.username || '')?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (c.name || c.full_name || c.username || '')?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     (c.email || '')?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -48,7 +80,7 @@ export default function CustomersPage() {
           <p className="text-2xl font-black text-[var(--text)]">{customers.length}</p>
         </div>
         <div className="bg-[var(--bg-elevated)] p-4 rounded-2xl border border-[var(--border)] text-center shadow-xs">
-          <p className="text-[var(--text-muted)] text-xs font-extrabold uppercase tracking-wider mb-1">Verified Renters</p>
+          <p className="text-[var(--text-muted)] text-xs font-extrabold uppercase tracking-wider mb-1">Verified Renters / Active</p>
           <p className="text-2xl font-black text-[var(--success)]">{activeRentersCount}</p>
         </div>
         <div className="bg-[var(--bg-elevated)] p-4 rounded-2xl border border-[var(--border)] text-center shadow-xs">
@@ -70,15 +102,12 @@ export default function CustomersPage() {
             />
           </div>
         </div>
+
         <div className="flex-1 overflow-auto">
-          {filtered.length === 0 ? (
-            <EmptyState 
-              icon={Users} 
-              title="No Customers Found" 
-              description="Customer directory will display registered accounts when users register on the portal." 
-            />
+          {filtered.length === 0 && !loadingUsers ? (
+            <EmptyState title="No Customers Found" description="No customer accounts match your search criteria." />
           ) : (
-            <CustomerTable customers={filtered} loading={isLoading} />
+            <CustomerTable customers={filtered} loading={loadingUsers || loadingOrders} />
           )}
         </div>
       </div>

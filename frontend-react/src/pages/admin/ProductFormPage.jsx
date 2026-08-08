@@ -21,7 +21,7 @@ export default function ProductFormPage() {
     api.get(`/products/${id}/`)
       .then((res) => setExistingProduct(res.data))
       .catch(() => {
-        toast({ title: 'Error', description: 'Failed to load product.', type: 'error' });
+        toast.error('Failed to load product.');
         navigate('/admin/products');
       })
       .finally(() => setLoadingProduct(false));
@@ -34,18 +34,14 @@ export default function ProductFormPage() {
       } else {
         await api.post('/products/', data);
       }
-      toast({
-        title: 'Success',
-        description: `Product successfully ${isEditing ? 'updated' : 'created'}.`,
-        type: 'success',
-      });
+      toast.success(`Product successfully ${isEditing ? 'updated' : 'created'}.`);
       navigate('/admin/products');
     } catch (err) {
       const detail =
         err?.response?.data?.detail ||
         Object.values(err?.response?.data || {})?.[0]?.[0] ||
         'Failed to save product.';
-      toast({ title: 'Error', description: detail, type: 'error' });
+      toast.error(detail);
     }
   };
 

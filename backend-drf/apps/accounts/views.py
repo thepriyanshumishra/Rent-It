@@ -139,6 +139,11 @@ class AddressViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class CustomerListView(generics.ListAPIView):
-    queryset = User.objects.filter(role=User.Role.CUSTOMER)
+    queryset = User.objects.all().order_by('-date_joined')
+    serializer_class = UserSerializer
+    permission_classes = (IsAuthenticated, IsAdminUser)
+
+class CustomerDetailView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsAuthenticated, IsAdminUser)

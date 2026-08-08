@@ -78,18 +78,34 @@ class UserSerializer(serializers.ModelSerializer):
     addresses = AddressSerializer(many=True, read_only=True)
     phone = serializers.CharField(source='phone_number', read_only=True)
     full_name = serializers.SerializerMethodField()
+    name = serializers.SerializerMethodField()
+    total_rentals = serializers.SerializerMethodField()
+    active_rentals = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
-            'full_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser',
-            'customer_profile', 'merchant_profile', 'addresses'
+            'full_name', 'name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser',
+            'customer_profile', 'merchant_profile', 'addresses', 'total_rentals', 'active_rentals',
+            'date_joined'
         )
         read_only_fields = ('role', 'username', 'is_staff', 'is_superuser')
 
     def get_full_name(self, obj):
-        return f"{obj.first_name} {obj.last_name}".strip() or obj.username
+        name = f"{obj.first_name} {obj.last_name}".strip()
+        return name if name else obj.username
+
+    def get_name(self, obj):
+        return self.get_full_name(obj)
+
+    def get_total_rentals(self, obj):
+        from apps.rentals.models import RentalOrder
+        return RentalOrder.objects.filter(user=obj).count()
+
+    def get_active_rentals(self, obj):
+        from apps.rentals.models import RentalOrder
+        return RentalOrder.objects.filter(user=obj, status__in=['ACTIVE', 'PENDING_DELIVERY', 'CONFIRMED', 'UNDER_INSPECTION']).count()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     customer_profile = CustomerProfileSerializer(required=False)
