@@ -6,7 +6,10 @@ from django.db import models
 from .models import Invoice
 from .serializers import InvoiceSerializer
 
+from rest_framework.permissions import AllowAny
+
 class InvoiceViewSet(viewsets.ModelViewSet):
+    permission_classes = [AllowAny]
     queryset = Invoice.objects.all()
     serializer_class = InvoiceSerializer
 
