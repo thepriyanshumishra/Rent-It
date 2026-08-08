@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Bell, Menu, X, User, Sun, Moon, Compass, Package } from 'lucide-react';
+import { ShoppingCart, Bell, Menu, X, User, Sun, Moon, Compass, Package, Building2, LayoutDashboard, LogOut } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import useCart from '../../hooks/useCart';
 import useNotifications from '../../hooks/useNotifications';
@@ -38,35 +38,55 @@ const Navbar = () => {
         
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 z-50 group">
-          <div className="w-9 h-9 rounded-2xl bg-accent flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
             R
           </div>
-          <span className="font-black text-xl tracking-tight text-text">RentOS</span>
+          <span className="font-black text-xl tracking-tight text-[var(--text)]">RentIt</span>
         </Link>
 
         {/* Desktop Nav Pills */}
-        <nav className="hidden md:flex items-center gap-2 bg-bg-elevated/80 border border-border p-1.5 rounded-2xl shadow-xs">
+        <nav className="hidden md:flex items-center gap-2 bg-[var(--bg-elevated)]/80 border border-[var(--border)] p-1.5 rounded-2xl shadow-xs">
           <Link 
             to="/explore"
             className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
               location.pathname === '/explore' 
-                ? 'bg-accent text-white shadow-sm' 
-                : 'text-text-secondary hover:text-text hover:bg-bg-subtle'
+                ? 'bg-[var(--accent)] text-white shadow-sm' 
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
             }`}
           >
             <Compass className="w-4 h-4" /> Explore
+          </Link>
+
+          <Link 
+            to="/businesses"
+            className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
+              location.pathname === '/businesses' 
+                ? 'bg-[var(--accent)] text-white shadow-sm' 
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
+            }`}
+          >
+            <Building2 className="w-4 h-4" /> Businesses
           </Link>
           
           <Link 
             to="/my-rentals"
             className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all ${
               location.pathname.startsWith('/my-rentals') 
-                ? 'bg-accent text-white shadow-sm' 
-                : 'text-text-secondary hover:text-text hover:bg-bg-subtle'
+                ? 'bg-[var(--accent)] text-white shadow-sm' 
+                : 'text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)]'
             }`}
           >
             <Package className="w-4 h-4" /> My Rentals
           </Link>
+
+          {isAdmin && (
+            <Link 
+              to="/admin"
+              className={`px-4 py-2 rounded-xl text-sm font-extrabold flex items-center gap-2 transition-all bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20`}
+            >
+              <LayoutDashboard className="w-4 h-4" /> Admin Portal
+            </Link>
+          )}
         </nav>
 
         {/* Right Actions */}
@@ -74,121 +94,107 @@ const Navbar = () => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2.5 rounded-2xl text-text-secondary hover:text-text hover:bg-bg-subtle border border-border transition-all"
+            className="p-2.5 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)] transition-all"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           >
-            {theme === 'dark' ? (
-              <Sun className="w-5 h-5 text-amber-400" />
-            ) : (
-              <Moon className="w-5 h-5 text-indigo-600" />
-            )}
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Cart Icon */}
-          <Link to="/cart" className="relative p-2.5 rounded-2xl text-text-secondary hover:text-text hover:bg-bg-subtle border border-border transition-all">
-            <ShoppingCart className="w-5 h-5" />
+          {/* Cart */}
+          <Link 
+            to="/cart"
+            className="relative p-2.5 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)] transition-all"
+            title="Shopping Cart"
+          >
+            <ShoppingCart className="w-4 h-4" />
             {totalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-accent text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-md">
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--accent)] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[var(--bg)]">
                 {totalItems}
               </span>
             )}
           </Link>
 
+          {/* User Auth Controls */}
           {isAuthenticated ? (
-            <>
-              <button className="relative p-2.5 rounded-2xl text-text-secondary hover:text-text hover:bg-bg-subtle border border-border transition-all">
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 bg-danger rounded-full"></span>
-                )}
-              </button>
-              
-              {/* User Dropdown */}
-              <div className="relative group">
-                <button className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-accent/30 transition-all ml-1">
-                  <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-extrabold text-sm shadow-md">
-                    {user?.first_name?.charAt(0) || user?.email?.charAt(0) || <User className="w-4 h-4" />}
-                  </div>
-                </button>
-
-                <div className="absolute right-0 top-full mt-2 w-56 py-2 bg-bg-elevated border border-border rounded-3xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right scale-95 group-hover:scale-100 z-50">
-                  <div className="px-4 py-2.5 border-b border-border-subtle mb-1">
-                    <p className="text-sm font-extrabold truncate text-text">{user?.first_name} {user?.last_name}</p>
-                    <p className="text-xs text-text-muted truncate">{user?.email}</p>
-                  </div>
-                  {isAdmin && (
-                    <Link to="/admin" className="block px-4 py-2 text-sm text-accent font-bold hover:bg-bg-subtle transition-colors">
-                      Admin Dashboard
-                    </Link>
-                  )}
-                  <Link to="/account" className="block px-4 py-2 text-sm font-semibold text-text hover:text-accent hover:bg-bg-subtle transition-colors">
-                    Account Settings
-                  </Link>
-                  <button onClick={logout} className="w-full text-left px-4 py-2 text-sm font-semibold text-danger hover:bg-danger/10 transition-colors">
-                    Sign Out
-                  </button>
+            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border)]">
+              <Link 
+                to="/account"
+                className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-[var(--bg-subtle)] hover:bg-[var(--border)] text-sm font-bold text-[var(--text)] transition-all"
+              >
+                <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white text-xs flex items-center justify-center">
+                  {(user?.first_name || user?.email || 'U')[0].toUpperCase()}
                 </div>
-              </div>
-            </>
-          ) : (
-            <div className="flex items-center gap-3">
-              <Link to="/login" className="text-sm font-extrabold text-text-secondary hover:text-text transition-colors px-4 py-2 rounded-xl">
-                Log in
+                <span>{user?.first_name || user?.email?.split('@')[0]}</span>
               </Link>
-              <Link to="/register" className="btn-primary text-sm px-5 py-2.5 rounded-2xl font-bold shadow-md">
-                Sign up
+              <button
+                onClick={logout}
+                className="p-2.5 rounded-2xl text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 border border-[var(--border)] transition-all"
+                title="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 pl-2 border-l border-[var(--border)]">
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm font-extrabold text-[var(--text)] hover:text-[var(--accent)] transition-all"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="px-4 py-2 rounded-2xl text-sm font-extrabold bg-[var(--accent)] text-white hover:opacity-90 shadow-md transition-all"
+              >
+                Get Started
               </Link>
             </div>
           )}
         </div>
 
-        {/* Mobile Menu Toggle */}
-        <div className="flex md:hidden items-center gap-3 z-50">
-          <button onClick={toggleTheme} className="p-2 rounded-xl text-text-secondary">
-            {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-600" />}
-          </button>
-          <Link to="/cart" className="relative p-2 text-text">
-            <ShoppingCart className="w-5 h-5" />
-            {totalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
-                {totalItems}
-              </span>
-            )}
-          </Link>
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-text p-2">
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-        </div>
+        {/* Mobile Hamburger */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2.5 rounded-2xl text-[var(--text)] hover:bg-[var(--bg-subtle)] border border-[var(--border)]"
+        >
+          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-full left-0 right-0 bg-bg-elevated border-b border-border shadow-2xl p-4 flex flex-col gap-3 md:hidden z-40"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden glass border-b border-[var(--border)] px-4 py-4 space-y-3"
           >
-            <Link to="/explore" className="text-base font-bold p-3 hover:bg-bg-subtle rounded-xl text-text flex items-center gap-2">
-              <Compass className="w-5 h-5 text-accent" /> Explore Products
+            <Link to="/explore" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
+              <Compass className="w-5 h-5 text-[var(--accent)]" /> Explore Products
             </Link>
-            <Link to="/my-rentals" className="text-base font-bold p-3 hover:bg-bg-subtle rounded-xl text-text flex items-center gap-2">
-              <Package className="w-5 h-5 text-accent" /> My Rentals
+            <Link to="/businesses" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
+              <Building2 className="w-5 h-5 text-[var(--accent)]" /> Business Bulk Orders
             </Link>
-            
-            {isAuthenticated ? (
-              <>
-                {isAdmin && <Link to="/admin" className="text-base font-bold text-accent p-3 hover:bg-bg-subtle rounded-xl">Admin Dashboard</Link>}
-                <Link to="/account" className="text-base font-bold p-3 hover:bg-bg-subtle rounded-xl text-text">Account Settings</Link>
-                <button onClick={logout} className="text-base font-bold text-danger text-left p-3 hover:bg-danger/10 rounded-xl">Sign Out</button>
-              </>
-            ) : (
-              <div className="flex flex-col gap-2 mt-2 pt-3 border-t border-border-subtle">
-                <Link to="/login" className="btn-secondary py-3 text-center rounded-xl font-bold">Log in</Link>
-                <Link to="/register" className="btn-primary py-3 text-center rounded-xl font-bold">Sign up</Link>
-              </div>
+            <Link to="/my-rentals" className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-subtle)] text-sm font-bold text-[var(--text)]">
+              <Package className="w-5 h-5 text-[var(--accent)]" /> My Rentals
+            </Link>
+            {isAdmin && (
+              <Link to="/admin" className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 text-sm font-bold">
+                <LayoutDashboard className="w-5 h-5" /> Admin Operations Portal
+              </Link>
             )}
+            <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between">
+              <button onClick={toggleTheme} className="flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)]">
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+                {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+              </button>
+              {isAuthenticated ? (
+                <button onClick={logout} className="text-sm font-bold text-red-500">Sign Out</button>
+              ) : (
+                <Link to="/login" className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-sm font-bold">Sign In</Link>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

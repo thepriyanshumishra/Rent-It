@@ -90,10 +90,10 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
-            'full_name', 'phone', 'phone_number', 'role',
+            'full_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser',
             'customer_profile', 'addresses'
         )
-        read_only_fields = ('role', 'username')
+        read_only_fields = ('role', 'username', 'is_staff', 'is_superuser')
 
     def get_full_name(self, obj):
         return f"{obj.first_name} {obj.last_name}".strip() or obj.username
@@ -105,8 +105,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'customer_profile')
-        read_only_fields = ('username', 'email')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser', 'customer_profile')
+        read_only_fields = ('username', 'email', 'role', 'is_staff', 'is_superuser')
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('customer_profile', None)

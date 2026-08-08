@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  LayoutDashboard, FileText, Package, Archive, Users, 
+  LayoutDashboard, FileText, Package, Archive, Users, Building2,
   DollarSign, BarChart2, Settings, LogOut, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
@@ -10,6 +10,7 @@ import useAuth from '../../hooks/useAuth';
 const navItems = [
   { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Overview' },
   { path: '/admin/rentals', icon: FileText, label: 'Rentals' },
+  { path: '/admin/business-orders', icon: Building2, label: 'Business Orders' },
   { path: '/admin/products', icon: Package, label: 'Products' },
   { path: '/admin/inventory', icon: Archive, label: 'Inventory' },
   { path: '/admin/customers', icon: Users, label: 'Customers' },
@@ -29,7 +30,7 @@ export default function AdminSidebar({ collapsed, onToggle }) {
       className="flex flex-col h-full bg-[var(--bg-elevated)] border-r border-[var(--border)] overflow-hidden shrink-0"
     >
       <div className="flex items-center justify-between p-4 h-[60px] border-b border-[var(--border)]">
-        {!collapsed && <span className="text-xl font-bold text-[var(--text)] whitespace-nowrap">RentOS</span>}
+        {!collapsed && <span className="text-xl font-black text-[var(--text)] whitespace-nowrap">RentIt</span>}
         <button 
           onClick={onToggle}
           className="p-1 rounded hover:bg-[var(--bg-subtle)] text-[var(--text-muted)] hover:text-[var(--text)] transition-colors mx-auto"
@@ -61,11 +62,11 @@ export default function AdminSidebar({ collapsed, onToggle }) {
       <div className="p-4 border-t border-[var(--border)]">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center font-bold shrink-0">
-            {user?.full_name?.charAt(0) || 'U'}
+            {user?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
           </div>
           {!collapsed && (
             <div className="ml-3 flex-1 overflow-hidden">
-              <p className="text-sm font-medium text-[var(--text)] truncate">{user?.full_name || 'Admin User'}</p>
+              <p className="text-sm font-medium text-[var(--text)] truncate">{user?.full_name || user?.email || 'Admin User'}</p>
               <button 
                 onClick={logout}
                 className="text-xs text-[var(--text-muted)] hover:text-[var(--danger)] flex items-center mt-1 transition-colors"

@@ -14,6 +14,7 @@ import PageTransition from './components/shared/PageTransition';
 const HomePage = React.lazy(() => import('./pages/customer/HomePage'));
 const ExplorePage = React.lazy(() => import('./pages/customer/ExplorePage'));
 const ProductDetailPage = React.lazy(() => import('./pages/customer/ProductDetailPage'));
+const BusinessPage = React.lazy(() => import('./pages/customer/BusinessPage'));
 const CartPage = React.lazy(() => import('./pages/customer/CartPage'));
 const CheckoutPage = React.lazy(() => import('./pages/customer/CheckoutPage'));
 const OrderConfirmationPage = React.lazy(() => import('./pages/customer/OrderConfirmationPage'));
@@ -27,6 +28,7 @@ const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardPage = React.lazy(() => import('./pages/admin/DashboardPage'));
 const RentalsPage = React.lazy(() => import('./pages/admin/RentalsPage'));
+const BusinessOrdersPage = React.lazy(() => import('./pages/admin/BusinessOrdersPage'));
 const AdminRentalDetailPage = React.lazy(() => import('./pages/admin/AdminRentalDetailPage'));
 const ProductsPage = React.lazy(() => import('./pages/admin/ProductsPage'));
 const ProductFormPage = React.lazy(() => import('./pages/admin/ProductFormPage'));
@@ -44,11 +46,12 @@ const CustomerLayout = () => (
   <div className="min-h-screen flex flex-col relative transition-colors duration-300">
     <Navbar />
     <main className="flex-1 pt-20">
-      <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div></div>}>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="w-10 h-10 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin"></div></div>}>
         <PageTransition>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/businesses" element={<BusinessPage />} />
             <Route path="/product/:slug" element={<ProductDetailPage />} />
             <Route path="/cart" element={<CartPage />} />
             
@@ -102,6 +105,7 @@ function App() {
                   <Route path="dashboard" element={<DashboardPage />} />
                   <Route path="rentals" element={<RentalsPage />} />
                   <Route path="rentals/:id" element={<AdminRentalDetailPage />} />
+                  <Route path="business-orders" element={<BusinessOrdersPage />} />
                   <Route path="products" element={<ProductsPage />} />
                   <Route path="products/new" element={<ProductFormPage />} />
                   <Route path="products/:id/edit" element={<ProductFormPage />} />
