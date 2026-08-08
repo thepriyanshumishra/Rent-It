@@ -64,7 +64,7 @@ const LoginPage = () => {
           onClick={toggleTheme}
           className="p-2.5 rounded-2xl text-[var(--text-secondary)] hover:text-[var(--text)] border border-[var(--border)] glass transition-all"
         >
-          {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-600" />}
+          {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-[var(--text)]" />}
         </button>
       </div>
 
@@ -101,7 +101,7 @@ const LoginPage = () => {
               <button
                 type="button"
                 onClick={() => fillDemo('customer@rentit.com', 'customer123456')}
-                className="px-3 py-2 rounded-xl text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 flex items-center justify-center gap-1.5 transition-all"
+                className="px-3 py-2 rounded-xl text-xs font-bold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent-subtle-hover)] flex items-center justify-center gap-1.5 transition-all"
               >
                 <UserCheck className="w-3.5 h-3.5" /> Customer Demo
               </button>

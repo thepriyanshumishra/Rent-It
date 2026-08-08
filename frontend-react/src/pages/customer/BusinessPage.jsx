@@ -51,32 +51,22 @@ const BusinessPage = () => {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] font-extrabold text-xs mb-4"
           >
-            <Building2 className="w-4 h-4" /> B2B & Enterprise Solutions
+            <Building2 className="w-3.5 h-3.5" /> RentIt B2B Enterprise Solutions
           </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-black tracking-tight text-[var(--text)] mb-4"
-          >
-            Bulk Rentals for <span className="text-[var(--accent)]">Businesses & Events</span>
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-[var(--text-secondary)]"
-          >
-            Equip your workforce, film crew, or corporate conference. Dedicated account management, flexible billing, and insured fleet logistics.
-          </motion.p>
+          <h1 className="text-3xl sm:text-5xl font-black text-[var(--text)] mb-4">
+            Equipment Rentals for Growing Businesses
+          </h1>
+          <p className="text-base sm:text-lg text-[var(--text-muted)] max-w-2xl mx-auto leading-relaxed">
+            Scalable camera gear, IT hardware, and production equipment with custom invoicing, dedicated account support, and doorstep delivery.
+          </p>
         </div>
 
-        {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-16">
-          <div className="card p-6 border border-[var(--border)]">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-[var(--accent)] flex items-center justify-center mb-4">
+        {/* Feature Highlights */}
+        <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto mb-16">
+          <div className="card p-6 border border-[var(--border)] text-center sm:text-left">
+            <div className="w-12 h-12 rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center mb-4 mx-auto sm:mx-0">
               <Package className="w-6 h-6" />
             </div>
             <h3 className="font-extrabold text-lg text-[var(--text)] mb-2">Custom Fleet Solutions</h3>

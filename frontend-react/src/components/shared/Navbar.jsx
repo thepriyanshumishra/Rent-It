@@ -38,7 +38,7 @@ const Navbar = () => {
         
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 z-50 group">
-          <div className="w-9 h-9 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
+          <div className="w-9 h-9 rounded-2xl bg-[var(--accent)] flex items-center justify-center text-white font-extrabold text-xl shadow-md group-hover:scale-105 transition-transform">
             R
           </div>
           <span className="font-black text-xl tracking-tight text-[var(--text)]">RentIt</span>
@@ -186,7 +186,7 @@ const Navbar = () => {
             )}
             <div className="pt-3 border-t border-[var(--border)] flex items-center justify-between">
               <button onClick={toggleTheme} className="flex items-center gap-2 text-sm font-bold text-[var(--text-secondary)]">
-                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
+                {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[var(--text)]" />}
                 {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
               </button>
               {isAuthenticated ? (

@@ -10,7 +10,7 @@ const Footer = () => {
           {/* Brand info */}
           <div className="md:col-span-2 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center">R</div>
+              <div className="w-8 h-8 rounded-xl bg-[var(--accent)] text-white font-black flex items-center justify-center">R</div>
               <span className="font-black text-xl text-[var(--text)]">RentIt</span>
             </div>
             <p className="text-sm text-[var(--text-muted)] max-w-sm leading-relaxed">
