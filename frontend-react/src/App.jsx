@@ -29,7 +29,6 @@ const RegisterPage = React.lazy(() => import('./pages/auth/RegisterPage'));
 const RenterLayout = React.lazy(() => import('./pages/renter/RenterLayout'));
 const RenterDashboardPage = React.lazy(() => import('./pages/renter/RenterDashboardPage'));
 const NewListingPage = React.lazy(() => import('./pages/renter/NewListingPage'));
-const MyListingsPage = React.lazy(() => import('./pages/renter/MyListingsPage'));
 
 // Admin Portal Pages
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
@@ -134,7 +133,6 @@ function App() {
                   <Route index element={<RenterDashboardPage />} />
                   <Route path="dashboard" element={<RenterDashboardPage />} />
                   <Route path="listings/new" element={<NewListingPage />} />
-                  <Route path="listings" element={<MyListingsPage />} />
                 </Route>
 
                 {/* Admin Portal — ADMIN role only */}
