@@ -23,26 +23,18 @@ class RenterProfile(models.Model):
     wallet_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     total_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     is_verified = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Renter Profile - {self.user.username} (₹{self.wallet_balance})"
 
 class CustomerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer_profile')
-    date_of_birth = models.DateField(null=True, blank=True)
-    loyalty_points = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.user.username} Profile"
 
 class Address(models.Model):
-    class AddressType(models.TextChoices):
-        BILLING = 'BILLING', _('Billing')
-        SHIPPING = 'SHIPPING', _('Shipping')
-
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
-    address_type = models.CharField(max_length=15, choices=AddressType.choices, default=AddressType.SHIPPING)
     street_address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
@@ -51,4 +43,4 @@ class Address(models.Model):
     is_default = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.user.username} - {self.address_type} - {self.city}"
+        return f"{self.user.username} - {self.city}"

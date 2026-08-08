@@ -11,7 +11,7 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(RenterProfile)
 class RenterProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'wallet_balance', 'total_earnings', 'is_verified', 'created_at')
+    list_display = ('user', 'wallet_balance', 'total_earnings', 'is_verified')
     list_filter = ('is_verified',)
     search_fields = ('user__username', 'user__email')
 
