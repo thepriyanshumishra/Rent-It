@@ -7,18 +7,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
-    UserProfileSerializer, ChangePasswordSerializer, AddressSerializer,
-    MerchantSerializer
+    UserProfileSerializer, ChangePasswordSerializer, AddressSerializer
 )
-from .models import Address, Merchant
+from .models import Address
 from .permissions import IsOwnerOrReadOnly, IsAdminUser
 
 User = get_user_model()
-
-class MerchantListView(generics.ListAPIView):
-    permission_classes = (AllowAny,)
-    serializer_class = MerchantSerializer
-    queryset = Merchant.objects.filter(is_active=True)
 
 class RegisterView(APIView):
     permission_classes = (AllowAny,)

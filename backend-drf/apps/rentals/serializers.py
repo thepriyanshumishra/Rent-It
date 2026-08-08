@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import Cart, CartItem, RentalOrder, RentalOrderItem
 from apps.products.models import Product
 from apps.products.serializers import ProductSerializer
-from apps.accounts.serializers import MerchantSerializer
 
 class CartItemSerializer(serializers.ModelSerializer):
     product = serializers.SerializerMethodField()
@@ -65,7 +64,6 @@ class RentalOrderItemSerializer(serializers.ModelSerializer):
 
 class RentalOrderSerializer(serializers.ModelSerializer):
     items = RentalOrderItemSerializer(many=True, read_only=True)
-    merchant = MerchantSerializer(read_only=True)
     customer_name = serializers.SerializerMethodField()
     customer_email = serializers.SerializerMethodField()
     customer_phone = serializers.SerializerMethodField()

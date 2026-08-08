@@ -3,14 +3,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import CustomerProfile, Address, Merchant
+from .models import CustomerProfile, Address
 
 User = get_user_model()
-
-class MerchantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Merchant
-        fields = ('id', 'store_name', 'store_code', 'city', 'pincode', 'address', 'phone', 'is_active', 'created_at')
 
 class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=True)
@@ -74,7 +69,6 @@ class AddressSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     customer_profile = CustomerProfileSerializer(read_only=True)
-    merchant_profile = MerchantSerializer(read_only=True)
     addresses = AddressSerializer(many=True, read_only=True)
     phone = serializers.CharField(source='phone_number', read_only=True)
     full_name = serializers.SerializerMethodField()
@@ -87,7 +81,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name',
             'full_name', 'name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser',
-            'customer_profile', 'merchant_profile', 'addresses', 'total_rentals', 'active_rentals',
+            'customer_profile', 'addresses', 'total_rentals', 'active_rentals',
             'date_joined'
         )
         read_only_fields = ('role', 'username', 'is_staff', 'is_superuser')
@@ -109,12 +103,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     customer_profile = CustomerProfileSerializer(required=False)
-    merchant_profile = MerchantSerializer(read_only=True)
     phone = serializers.CharField(source='phone_number', required=False, allow_blank=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser', 'customer_profile', 'merchant_profile')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone', 'phone_number', 'role', 'is_staff', 'is_superuser', 'customer_profile')
         read_only_fields = ('username', 'email', 'role', 'is_staff', 'is_superuser')
 
     def update(self, instance, validated_data):

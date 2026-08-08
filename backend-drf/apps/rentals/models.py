@@ -15,7 +15,6 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     product_id = models.IntegerField()
     quantity = models.PositiveIntegerField(default=1)
-    rental_period = models.ForeignKey('pricing.RentalPeriod', on_delete=models.SET_NULL, null=True)
 
 def generate_order_number():
     return f"RNT-{''.join(random.choices(string.digits, k=6))}"
@@ -27,7 +26,6 @@ class RentalOrder(models.Model):
 
     order_number = models.CharField(max_length=50, default=generate_order_number, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    merchant = models.ForeignKey('accounts.Merchant', on_delete=models.SET_NULL, null=True, blank=True, related_name='rental_orders')
     fulfillment_type = models.CharField(max_length=20, choices=FulfillmentType.choices, default=FulfillmentType.DOORSTEP)
     pickup_code = models.CharField(max_length=10, default=generate_pickup_code, blank=True)
     delivery_address = models.TextField(blank=True, null=True)

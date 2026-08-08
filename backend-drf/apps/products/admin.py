@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, ProductImage, ProductVariant, RenterListingRequest
+from .models import Category, Product, ProductImage, RenterListingRequest
 
 @admin.register(RenterListingRequest)
 class RenterListingRequestAdmin(admin.ModelAdmin):
@@ -10,4 +10,3 @@ class RenterListingRequestAdmin(admin.ModelAdmin):
 admin.site.register(Category)
 admin.site.register(Product)
 admin.site.register(ProductImage)
-admin.site.register(ProductVariant)

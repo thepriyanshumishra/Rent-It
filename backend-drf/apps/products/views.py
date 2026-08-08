@@ -9,10 +9,10 @@ from django.db.models import Q
 from django.conf import settings
 from django.core.files.storage import default_storage
 
-from .models import Category, Product, ProductImage, ProductVariant, RenterListingRequest
+from .models import Category, Product, ProductImage, RenterListingRequest
 from .serializers import (
     CategorySerializer, ProductSerializer,
-    ProductImageSerializer, ProductVariantSerializer,
+    ProductImageSerializer,
     RenterListingRequestSerializer
 )
 from apps.accounts.models import User
@@ -219,15 +219,6 @@ class RenterListingRequestViewSet(viewsets.ModelViewSet):
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [IsAuthenticatedOrReadOnly()]
-
-class ProductVariantViewSet(viewsets.ModelViewSet):
-    queryset = ProductVariant.objects.all()
-    serializer_class = ProductVariantSerializer
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:

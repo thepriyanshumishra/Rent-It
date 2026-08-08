@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import Cart, CartItem, RentalOrder, RentalOrderItem
 from .serializers import CartSerializer, CartItemSerializer, RentalOrderSerializer, RentalOrderItemSerializer
-from apps.accounts.models import Merchant, User
+from apps.accounts.models import User
 from apps.products.models import Product
 
 class CartView(APIView):

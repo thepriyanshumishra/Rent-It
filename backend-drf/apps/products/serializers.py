@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductVariant, RenterListingRequest
-from apps.pricing.models import ProductPricing, RentalPeriod
+from .models import Category, Product, ProductImage, RenterListingRequest
 
 class CategorySerializer(serializers.ModelSerializer):
     product_count = serializers.SerializerMethodField()
@@ -29,34 +28,15 @@ class ProductImageSerializer(serializers.ModelSerializer):
             return obj.image.url
         return None
 
-class ProductVariantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductVariant
-        fields = '__all__'
-
-class PricingSerializer(serializers.ModelSerializer):
-    period_name = serializers.ReadOnlyField(source='period.name')
-    duration_hours = serializers.ReadOnlyField(source='period.duration_hours')
-
-    class Meta:
-        model = ProductPricing
-        fields = ('id', 'period', 'period_name', 'duration_hours', 'price')
-
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, read_only=True)
-    variants = ProductVariantSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=True)
     category_name = serializers.ReadOnlyField(source='category.name')
-    pricings = serializers.SerializerMethodField()
     primary_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = '__all__'
-
-    def get_pricings(self, obj):
-        pricings = ProductPricing.objects.filter(product_id=obj.id)
-        return PricingSerializer(pricings, many=True).data
 
     def get_primary_image(self, obj):
         primary = obj.images.filter(is_primary=True).first() or obj.images.first()

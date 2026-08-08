@@ -9,32 +9,14 @@ urlpatterns = [
     # Authentication & User management
     path('api/auth/', include('apps.accounts.urls')),
 
-    # Products & Categories
+    # Products, Categories & Renter Listing Requests
     path('api/', include('apps.products.urls')),
-
-    # Inventory
-    path('api/inventory/', include('apps.inventory.urls')),
-
-    # Pricing
-    path('api/pricing/', include('apps.pricing.urls')),
 
     # Rentals (Cart + Orders)
     path('api/rentals/', include('apps.rentals.urls')),
 
     # Payments
     path('api/payments/', include('apps.payments.urls')),
-
-    # Security Deposits
-    path('api/deposits/', include('apps.deposits.urls')),
-
-    # Late Fees
-    path('api/latefees/', include('apps.latefees.urls')),
-
-    # Pickups, Returns, Inspections
-    path('api/', include('apps.pickups.urls')),
-
-    # Invoices
-    path('api/invoices/', include('apps.invoices.urls')),
 
     # Notifications
     path('api/notifications/', include('apps.notifications.urls')),
@@ -49,4 +31,3 @@ urlpatterns = [
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
