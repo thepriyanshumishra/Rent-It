@@ -69,25 +69,6 @@ export default function CustomerDetailPage() {
     return false;
   });
 
-  try {
-    const stored = localStorage.getItem('rentos_placed_orders');
-    if (stored) {
-      const local = JSON.parse(stored);
-      local.forEach(lo => {
-        const loUserId = lo.user?.id || lo.user_id || (typeof lo.user === 'object' ? lo.user?.id : lo.user);
-        const loEmail = lo.user?.email || lo.address?.email;
-        const matches = (loUserId && String(loUserId) === String(id)) || 
-                        (loEmail && email && loEmail.toLowerCase() === email.toLowerCase()) ||
-                        (!loUserId && !loEmail && (email === 'rai@joi.com' || role === 'CUSTOMER'));
-        if (matches && !userOrders.some(uo => uo.id === lo.id || uo.order_number === lo.order_number)) {
-          userOrders.push(lo);
-        }
-      });
-    }
-  } catch (e) {
-    console.warn('LocalStorage order merge error', e);
-  }
-
   const tabs = [
     { id: 'rentals', label: `Rental History (${userOrders.length})` },
     { id: 'deposits', label: 'Security Deposits' },

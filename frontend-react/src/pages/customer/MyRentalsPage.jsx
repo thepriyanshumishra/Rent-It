@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { Package } from 'lucide-react';
@@ -8,19 +8,13 @@ import Skeleton from '../../components/ui/Skeleton';
 import EmptyState from '../../components/ui/EmptyState';
 import * as rentalsApi from '../../api/rentals';
 
-const sampleProductMap = {
-  1: { name: 'Sony FX3 Cinema Camera Kit', price: 2500, deposit: 10000, category: 'Cameras & Video' },
-  2: { name: 'Apple MacBook Pro 16" M3 Max', price: 3000, deposit: 15000, category: 'Electronics' },
-  3: { name: 'Super73-RX Electric Adventure Bike', price: 1800, deposit: 5000, category: 'Vehicles & E-Bikes' },
-  4: { name: 'DJI Inspire 3 Cinema Drone 8K', price: 8000, deposit: 25000, category: 'Cameras & Video' },
-  5: { name: 'Herman Miller Aeron Ergonomic Chair', price: 600, deposit: 3000, category: 'Office Furniture' },
-  6: { name: 'JBL PartyBox Ultimate PA System', price: 2000, deposit: 8000, category: 'Audio & Sound' },
-  7: { name: 'EcoFlow Delta Pro Power Station', price: 1500, deposit: 6000, category: 'Event & Outdoor' },
-  8: { name: 'Apple Vision Pro 512GB VR Headset', price: 4000, deposit: 20000, category: 'Electronics' }
-};
-
 const MyRentalsPage = () => {
   const [activeTab, setActiveTab] = useState('active');
+
+  // Purge any old local storage mock order cache on page load for clean state
+  useEffect(() => {
+    localStorage.removeItem('rentos_placed_orders');
+  }, []);
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-rentals'],
@@ -28,44 +22,20 @@ const MyRentalsPage = () => {
     retry: false
   });
 
-  // Read local orders placed in guest/demo session
-  let localOrders = [];
-  try {
-    const stored = localStorage.getItem('rentos_placed_orders');
-    if (stored) localOrders = JSON.parse(stored);
-  } catch (e) {
-    console.warn('LocalStorage read error', e);
-  }
+  const apiRentals = Array.isArray(data?.data) 
+    ? data.data 
+    : (Array.isArray(data) ? data : (data?.results || []));
 
-  const apiRentals = data?.data || [];
-  const combined = [...localOrders, ...apiRentals];
-
-  // Deduplicate orders
-  const uniqueMap = new Map();
-  combined.forEach(item => {
-    if (!item) return;
-    const key = item.id || item.order_number;
-    if (key && !uniqueMap.has(key)) {
-      uniqueMap.set(key, item);
-    }
-  });
-
-  const rentals = Array.from(uniqueMap.values()).map(r => {
-    const pId = r.product_id || r.items?.[0]?.product_id || 3;
-    const mappedProd = sampleProductMap[pId] || { name: 'Super73-RX Electric Adventure Bike', price: 1800, deposit: 5000, category: 'Vehicles' };
+  const rentals = apiRentals.map(r => {
     return {
       ...r,
-      order_number: r.order_number || r.id || `RNT-${Math.floor(100000 + Math.random() * 900000)}`,
-      product: r.product || {
-        id: pId,
-        name: mappedProd.name,
-        category: mappedProd.category
-      },
-      rental_amount: r.rental_amount || mappedProd.price,
-      deposit_amount: r.deposit_amount || mappedProd.deposit,
-      start_date: r.start_date || new Date().toISOString().split('T')[0],
+      order_number: r.order_number || `RNT-${r.id}`,
+      product: r.product || r.items?.[0]?.product || { name: 'Rental Item' },
+      rental_amount: r.total_amount || r.rental_amount || 0,
+      deposit_amount: r.deposit_amount || 0,
+      start_date: r.created_at ? new Date(r.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
       end_date: r.end_date || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-      status: r.status || 'active'
+      status: r.status || 'ACTIVE'
     };
   });
 
@@ -112,7 +82,7 @@ const MyRentalsPage = () => {
 
         {/* Content */}
         <div className="min-h-[400px]">
-          {isLoading && rentals.length === 0 ? (
+          {isLoading ? (
             <div className="grid gap-4">
               <Skeleton className="w-full h-36 rounded-3xl" />
               <Skeleton className="w-full h-36 rounded-3xl" />
