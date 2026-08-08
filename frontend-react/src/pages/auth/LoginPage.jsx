@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ identifier: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login, user } = useAuth();
@@ -32,12 +32,12 @@ const LoginPage = () => {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
   };
 
-  const handleQuickDemoLogin = async (email, password) => {
+  const handleQuickDemoLogin = async (identifier, password) => {
     setLoading(true);
-    setFormData({ email, password });
+    setFormData({ identifier, password });
     try {
-      const loggedInUser = await login({ email, password });
-      toast.success(`Signed in as ${loggedInUser.first_name || loggedInUser.email}!`);
+      const loggedInUser = await login({ email: identifier, username: identifier, password });
+      toast.success(`Signed in as ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
       const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
       const isUserRenter = loggedInUser.role === 'RENTER' || loggedInUser.role === 'renter';
@@ -63,8 +63,12 @@ const LoginPage = () => {
     setLoading(true);
     
     try {
-      const loggedInUser = await login(formData);
-      toast.success(`Welcome back, ${loggedInUser.first_name || loggedInUser.email}!`);
+      const loggedInUser = await login({
+        email: formData.identifier,
+        username: formData.identifier,
+        password: formData.password
+      });
+      toast.success(`Welcome back, ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
       const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
       const isUserRenter = loggedInUser.role === 'RENTER' || loggedInUser.role === 'renter';
@@ -78,7 +82,7 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error(error);
-      const msg = error.response?.data?.detail || 'Invalid email or password';
+      const msg = error.response?.data?.detail || 'Invalid username/email or password';
       toast.error(msg);
     } finally {
       setLoading(false);
@@ -129,11 +133,11 @@ const LoginPage = () => {
               </span>
               <span className="text-[9px] text-emerald-500 font-extrabold">AUTO AUTH</span>
             </p>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-3 gap-1.5 mb-2">
               <button
                 type="button"
                 disabled={loading}
-                onClick={() => handleQuickDemoLogin('renter@rentit.com', 'Password@123')}
+                onClick={() => handleQuickDemoLogin('renter', 'Password123!')}
                 className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
               >
                 <Sparkles className="w-3 h-3" /> Renter
@@ -141,7 +145,7 @@ const LoginPage = () => {
               <button
                 type="button"
                 disabled={loading}
-                onClick={() => handleQuickDemoLogin('admin@rentit.com', 'Password@123')}
+                onClick={() => handleQuickDemoLogin('admin', 'Password123!')}
                 className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
               >
                 <ShieldCheck className="w-3 h-3" /> HQ Admin
@@ -149,31 +153,41 @@ const LoginPage = () => {
               <button
                 type="button"
                 disabled={loading}
-                onClick={() => handleQuickDemoLogin('customer@rentit.com', 'Password@123')}
+                onClick={() => handleQuickDemoLogin('customer', 'Password123!')}
                 className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--bg-elevated)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--text)] hover:text-[var(--bg)] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
               >
                 <UserCheck className="w-3 h-3" /> Customer
               </button>
             </div>
-            <p className="text-[11px] text-[var(--text-muted)] text-center mt-2.5 font-medium">
-              HQ Super Admin? Accessible via <a href="http://localhost:8000/admin/" target="_blank" rel="noreferrer" className="text-[var(--accent)] underline font-bold">Django Admin Panel</a>
-            </p>
+            
+            {/* Django Super Admin Direct Quick Auth */}
+            <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px]">
+              <span className="text-[var(--text-muted)] font-medium">Django SuperAdmin: <strong className="text-[var(--text)] font-bold">djangoadmin</strong></span>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleQuickDemoLogin('djangoadmin', 'Password123!')}
+                className="text-[var(--accent)] hover:underline font-extrabold cursor-pointer"
+              >
+                Quick Login
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Email Address
+                Username or Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
-                  id="email"
-                  type="email"
+                  id="identifier"
+                  type="text"
                   required
-                  autoComplete="email"
-                  placeholder="admin@rentit.com"
-                  value={formData.email}
+                  autoComplete="username"
+                  placeholder="renter or renter@rentit.com"
+                  value={formData.identifier}
                   onChange={handleChange}
                   className="input-field pl-10"
                 />

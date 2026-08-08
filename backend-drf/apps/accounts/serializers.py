@@ -50,7 +50,8 @@ class RegisterSerializer(serializers.Serializer):
         return user
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(required=True)
+    email = serializers.CharField(required=False, allow_blank=True, default='')
+    username = serializers.CharField(required=False, allow_blank=True, default='')
     password = serializers.CharField(write_only=True, required=True)
 
 CustomTokenObtainPairSerializer = LoginSerializer

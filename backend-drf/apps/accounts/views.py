@@ -45,23 +45,30 @@ class LoginView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        email = serializer.validated_data['email'].lower()
+        raw_identifier = (
+            serializer.validated_data.get('email') or 
+            serializer.validated_data.get('username') or 
+            request.data.get('email') or 
+            request.data.get('username') or ''
+        ).strip()
         password = serializer.validated_data['password']
 
+        if not raw_identifier:
+            return Response({"detail": "Username or email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        from django.db.models import Q
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(Q(email__iexact=raw_identifier) | Q(username__iexact=raw_identifier))
         except User.DoesNotExist:
-            return Response({"detail": "Invalid email or password."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Invalid username/email or password."}, status=status.HTTP_401_UNAUTHORIZED)
+        except User.MultipleObjectsReturned:
+            user = User.objects.filter(Q(email__iexact=raw_identifier) | Q(username__iexact=raw_identifier)).first()
 
         if not user.check_password(password):
-            return Response({"detail": "Invalid email or password."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail": "Invalid username/email or password."}, status=status.HTTP_401_UNAUTHORIZED)
 
         if not user.is_active:
             return Response({"detail": "User account is disabled."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        merchant_data = None
-        if hasattr(user, 'merchant_profile'):
-            merchant_data = MerchantSerializer(user.merchant_profile).data
 
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -69,6 +76,7 @@ class LoginView(APIView):
             'refresh': str(refresh),
             'user': {
                 'id': user.id,
+                'username': user.username,
                 'email': user.email,
                 'first_name': user.first_name,
                 'last_name': user.last_name,
@@ -77,7 +85,6 @@ class LoginView(APIView):
                 'role': user.role,
                 'is_staff': user.is_staff,
                 'is_superuser': user.is_superuser,
-                'merchant_profile': merchant_data,
             }
         }, status=status.HTTP_200_OK)
 
