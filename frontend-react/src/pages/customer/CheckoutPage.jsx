@@ -45,7 +45,7 @@ const getItemDeposit = (item) => {
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
-  const { cart, clearCart } = useCart();
+  const { cart, clearCart, removeItem, updateItem } = useCart();
   const { user } = useAuth();
   
   const [step, setStep] = useState(1);
@@ -209,20 +209,20 @@ const getDays = (item) => {
           <div className="lg:col-span-7 space-y-6">
             <div className="card p-6 sm:p-8 border border-[var(--border)] bg-[var(--bg-elevated)] rounded-3xl shadow-sm">
               
-              {/* STEP 1: REVIEW ITEMS */}
+            {/* STEP 1: REVIEW ITEMS */}
               {step === 1 && (
                 <div className="space-y-6 animate-in fade-in duration-200">
                   <div>
                     <h2 className="text-lg font-black text-[var(--text)]">Review Equipment List</h2>
-                    <p className="text-xs text-[var(--text-muted)] font-medium">Verify your selected rental items and booking duration.</p>
+                    <p className="text-xs text-[var(--text-muted)] font-medium">Adjust quantities or remove items before proceeding.</p>
                   </div>
 
-                  <div className="space-y-4 divide-y divide-[var(--border)]">
+                  <div className="space-y-3">
                     {itemsList.map(item => {
                       const product = item.product || {};
                       const fallbackInfo = sampleProductMap[item.product_id] || sampleProductMap[item.id] || sampleProductMap[3];
-                      const productName = product.name || fallbackInfo.name;
-                      const categoryName = product.category_name || product.category || fallbackInfo.category;
+                      const productName = product.name || fallbackInfo?.name;
+                      const categoryName = product.category_name || product.category || fallbackInfo?.category;
 
                       let imageUrl = product.primary_image;
                       if (!imageUrl && product.images && product.images.length > 0) {
@@ -236,41 +236,83 @@ const getDays = (item) => {
                       const daysCount = getDays(item);
                       const sDate = item.start_date || item.startDate || new Date().toISOString().split('T')[0];
                       const eDate = item.end_date || item.endDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
+                      const availQty = product?.available_quantity ?? product?.quantity ?? 99;
+                      const lineRental = itemPrice * daysCount * qty;
+                      const lineDeposit = itemDeposit * qty;
+
+                      const handleQtyChange = (delta) => {
+                        const newQty = qty + delta;
+                        if (newQty < 1) {
+                          removeItem(item.id);
+                        } else if (newQty > availQty) {
+                          toast.error(`Only ${availQty} unit(s) available in stock.`);
+                        } else {
+                          updateItem(item.id, { quantity: newQty });
+                        }
+                      };
 
                       return (
-                        <div key={item.id} className="pt-4 first:pt-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)] overflow-hidden shrink-0">
-                              {imageUrl ? (
-                                <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[var(--accent)] bg-[var(--accent-subtle)]">
-                                  <Package className="w-6 h-6" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-extrabold text-[var(--accent)] uppercase tracking-wider block">{categoryName}</span>
-                              <h4 className="font-extrabold text-[var(--text)] text-sm">{productName} {qty > 1 && `(x${qty})`}</h4>
-                              <div className="text-xs text-[var(--text-muted)] font-medium mt-1 flex flex-wrap items-center gap-2">
-                                <span className="px-2 py-0.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] font-extrabold text-[11px]">
-                                  {daysCount} Day{daysCount > 1 ? 's' : ''} Rental
-                                </span>
-                                <span className="text-[var(--text-muted)]">•</span>
-                                <span className="text-[var(--text-secondary)]">{sDate} to {eDate}</span>
+                        <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)]">
+                          {/* Thumbnail */}
+                          <div className="w-16 h-16 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden shrink-0">
+                            {imageUrl ? (
+                              <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[var(--accent)] bg-[var(--accent-subtle)]">
+                                <Package className="w-6 h-6" />
                               </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <span className="text-[10px] font-extrabold text-[var(--accent)] uppercase tracking-wider block">{categoryName}</span>
+                            <h4 className="font-extrabold text-[var(--text)] text-sm truncate">{productName}</h4>
+                            <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                              <span className="px-2 py-0.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] font-extrabold">
+                                {daysCount} Day{daysCount > 1 ? 's' : ''} Rental
+                              </span>
+                              <span className="text-[var(--text-muted)]">{sDate} → {eDate}</span>
+                            </div>
+                            <div className="text-[11px] text-[var(--text-muted)] font-medium">
+                              ₹{itemPrice.toLocaleString('en-IN')}/day × {daysCount}d = <span className="font-extrabold text-[var(--text)]">₹{lineRental.toLocaleString('en-IN')}</span>
+                              {itemDeposit > 0 && (
+                                <span className="ml-2 text-emerald-600 dark:text-emerald-400 font-extrabold">+ ₹{lineDeposit.toLocaleString('en-IN')} deposit</span>
+                              )}
                             </div>
                           </div>
 
-                          <div className="text-right sm:text-right w-full sm:w-auto border-t sm:border-t-0 border-[var(--border)] pt-2 sm:pt-0">
-                            <div className="text-sm font-extrabold text-[var(--text)]">
-                              ₹{itemPrice.toLocaleString('en-IN')}<span className="text-[10px] font-bold text-[var(--text-muted)]"> / day</span>
+                          {/* Qty controls + Remove */}
+                          <div className="flex items-center gap-3 self-center shrink-0">
+                            <div className="flex items-center gap-1 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-xl p-1">
+                              <button
+                                type="button"
+                                onClick={() => handleQtyChange(-1)}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black text-[var(--text)] hover:bg-red-500/10 hover:text-red-500 transition-colors cursor-pointer"
+                                title={qty === 1 ? 'Remove item' : 'Decrease quantity'}
+                              >
+                                {qty === 1 ? '×' : '−'}
+                              </button>
+                              <span className="min-w-[20px] text-center text-sm font-black text-[var(--accent)]">{qty}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleQtyChange(1)}
+                                disabled={qty >= availQty}
+                                className="w-7 h-7 rounded-lg flex items-center justify-center text-sm font-black text-[var(--text)] hover:bg-[var(--accent-subtle)] hover:text-[var(--accent)] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                                title={qty >= availQty ? `Max ${availQty} available` : 'Increase quantity'}
+                              >
+                                +
+                              </button>
                             </div>
-                            {itemDeposit > 0 && (
-                              <div className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                Deposit: ₹{itemDeposit.toLocaleString('en-IN')}
-                              </div>
-                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => removeItem(item.id)}
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-500/10 hover:text-red-500 transition-colors cursor-pointer"
+                              title="Remove item"
+                            >
+                              ✕
+                            </button>
                           </div>
                         </div>
                       );
