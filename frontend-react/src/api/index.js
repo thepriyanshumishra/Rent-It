@@ -9,7 +9,7 @@ export const api = axios.create({
 
 // Attach token on every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('rentit_access');
+  const token = localStorage.getItem('accessToken');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -21,12 +21,12 @@ api.interceptors.response.use(
     const original = error.config;
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
-      const refresh = localStorage.getItem('rentit_refresh');
+      const refresh = localStorage.getItem('refreshToken');
       if (refresh) {
         try {
           const res = await axios.post(`${BASE_URL}/auth/refresh/`, { refresh });
           if (res.data.access) {
-            localStorage.setItem('rentit_access', res.data.access);
+            localStorage.setItem('accessToken', res.data.access);
             original.headers.Authorization = `Bearer ${res.data.access}`;
             return api(original);
           }
@@ -71,34 +71,14 @@ export const cartApi = {
 
 // ─── Rentals ───────────────────────────────────────────────
 export const rentalsApi = {
-  checkout: (data) => api.post('/rentals/checkout/', data),
-  confirmPayment: (rentalId) => api.post(`/rentals/${rentalId}/confirm-payment/`),
-  list: (params) => api.get('/rentals/', { params }),
-  detail: (id) => api.get(`/rentals/${id}/`),
-  requestReturn: (id, notes) => api.post(`/rentals/${id}/request-return/`, { notes }),
-  // Admin only
-  confirmPickup: (id, data) => api.post(`/rentals/${id}/pickup/`, data),
-  processReturn: (id, data) => api.post(`/rentals/${id}/return/`, data),
-  inspect: (id, data) => api.post(`/rentals/${id}/inspect/`, data),
-  settle: (id, data) => api.post(`/rentals/${id}/settle/`, data),
-};
-
-// ─── Admin ────────────────────────────────────────────────
-export const adminApi = {
-  // Real backend: GET /api/reports/dashboard/
-  dashboard: () => api.get('/reports/dashboard/'),
-  // Real backend: GET /api/inventory/items/
-  inventory: () => api.get('/inventory/items/'),
-  updateInventoryStatus: (id, data) =>
-    api.patch(`/inventory/items/${id}/`, data),
-  // Real backend: GET /api/auth/customers/
-  customers: () => api.get('/auth/customers/'),
-  // Real backend: GET /api/returns/ (pickups app)
-  returnRequests: () => api.get('/returns/'),
-  processReturnRequest: (id, action) =>
-    api.post(`/returns/${id}/${action}/`),
-  // Real backend: GET /api/reports/revenue/
-  revenueReport: () => api.get('/reports/revenue/'),
+  checkout:      (data)      => api.post('/rentals/checkout/', data),
+  list:          (params)    => api.get('/rentals/', { params }),
+  detail:        (id)        => api.get(`/rentals/${id}/`),
+  // Vendor / store-staff actions
+  confirmPickup: (id, data)  => api.post(`/rentals/${id}/pickup-confirm/`, data),
+  processReturn: (id, data)  => api.post(`/rentals/${id}/process-return/`, data),
+  settleDeposit: (id, data)  => api.post(`/rentals/${id}/settle-deposit/`, data),
+  cancel:        (id, data)  => api.post(`/rentals/${id}/cancel/`, data),
 };
 
 export default api;

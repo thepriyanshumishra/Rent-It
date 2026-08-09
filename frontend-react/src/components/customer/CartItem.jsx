@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Trash2, Package } from 'lucide-react';
 import PriceDisplay from '../ui/PriceDisplay';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 const sampleProductMap = {
   1: { name: 'Sony FX3 Cinema Camera Kit', price: 2500, deposit: 10000, category: 'Cameras & Video' },
@@ -22,6 +23,8 @@ const calculateDays = (s, e) => {
 };
 
 const CartItem = ({ item, onRemove, onUpdateQuantity }) => {
+  const [imgErr, setImgErr] = useState(false);
+
   if (!item) return null;
 
   const product = item.product || {};
@@ -30,11 +33,7 @@ const CartItem = ({ item, onRemove, onUpdateQuantity }) => {
   const productName = product.name || fallbackInfo.name;
   const categoryName = product.category_name || product.category || fallbackInfo.category;
 
-  let imageUrl = product.primary_image;
-  if (!imageUrl && product.images && product.images.length > 0) {
-    const first = product.images[0];
-    imageUrl = typeof first === 'string' ? first : (first.url || first.image_url);
-  }
+  const imageUrl = getProductImageUrl(product, productName);
 
   const startDate = item.start_date || item.startDate;
   const endDate = item.end_date || item.endDate;
@@ -69,14 +68,13 @@ const CartItem = ({ item, onRemove, onUpdateQuantity }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 py-5 border-b border-[var(--border)] last:border-b-0">
       {/* Product Image */}
-      <div className="w-24 h-24 shrink-0 bg-[var(--bg-subtle)] rounded-2xl overflow-hidden border border-[var(--border)]">
-        {imageUrl ? (
-          <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-[var(--accent)] bg-[var(--accent-subtle)]">
-            <Package className="w-8 h-8" />
-          </div>
-        )}
+      <div className="w-24 h-24 shrink-0 bg-[var(--bg-subtle)] rounded-2xl overflow-hidden border border-[var(--border)] relative">
+        <img 
+          src={imgErr ? getProductImageUrl({}, productName) : imageUrl} 
+          alt={productName} 
+          onError={() => setImgErr(true)}
+          className="w-full h-full object-cover" 
+        />
       </div>
       
       {/* Details & Controls */}

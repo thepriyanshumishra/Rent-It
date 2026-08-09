@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from .serializers import (
-    RegisterSerializer, LoginSerializer, UserSerializer,
+    RegisterSerializer, VendorRegisterSerializer, LoginSerializer, UserSerializer,
     UserProfileSerializer, ChangePasswordSerializer, AddressSerializer
 )
 from .models import Address
@@ -19,6 +19,31 @@ class RegisterView(APIView):
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': f"{user.first_name} {user.last_name}".strip() or user.username,
+                    'phone': user.phone_number,
+                    'role': user.role,
+                }
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VendorRegisterView(APIView):
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # Support multipart/form-data for logo file upload
+        serializer = VendorRegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)

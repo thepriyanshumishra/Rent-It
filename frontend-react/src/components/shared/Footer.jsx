@@ -23,7 +23,6 @@ const Footer = () => {
             <h4 className="font-extrabold text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-4">Quick Links</h4>
             <ul className="space-y-2.5">
               <li><Link to="/explore" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">Explore Fleet</Link></li>
-              <li><Link to="/become-a-lender" className="text-sm font-bold text-[var(--accent)] hover:underline transition-colors flex items-center gap-1">Become a Lender (Earn 60%)</Link></li>
               <li><Link to="/my-rentals" className="text-sm text-[var(--text-muted)] hover:text-[var(--text)] transition-colors">My Rentals</Link></li>
             </ul>
           </div>

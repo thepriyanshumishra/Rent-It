@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { 
   ChevronRight, Truck, ShoppingCart, ShieldCheck, Clock, Shield, 
-  Lock, Calendar, CheckCircle2, UserCheck, ArrowLeft
+  Lock, Calendar, CheckCircle2, UserCheck, ArrowLeft, Building2, MapPin 
 } from 'lucide-react';
 import PageTransition from '../../components/shared/PageTransition';
 import ProductGallery from '../../components/customer/ProductGallery';
@@ -15,11 +15,13 @@ import EmptyState from '../../components/ui/EmptyState';
 import { toast } from '../../components/ui/Toast';
 import * as productsApi from '../../api/products';
 import useCart from '../../hooks/useCart';
+import { useStore } from '../../context/StoreContext';
 
 const ProductDetailPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { addToCart, cart } = useCart();
+  const { selectedStore, allStores, selectStore, getClosestStoreWithStock } = useStore();
   
   const todayStr = new Date().toISOString().split('T')[0];
   const defaultEndStr = new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
@@ -37,8 +39,8 @@ const ProductDetailPage = () => {
   });
 
   const { data: relatedData } = useQuery({
-    queryKey: ['products-featured'],
-    queryFn: () => productsApi.getFeaturedProducts()
+    queryKey: ['products-related'],
+    queryFn: () => productsApi.getProducts({ limit: 4 })
   });
 
   const product = data?.data;
@@ -60,6 +62,16 @@ const ProductDetailPage = () => {
       : (Array.isArray(relatedData) ? relatedData : []));
 
   const relatedProducts = rawRelated.filter(p => p.id !== product?.id).slice(0, 3);
+
+  // Auto-snap selected store to the physical store that actually has stock for this product
+  useEffect(() => {
+    if (product && getClosestStoreWithStock) {
+      const closest = getClosestStoreWithStock(product.id);
+      if (closest && closest.id !== selectedStore?.id) {
+        selectStore(closest);
+      }
+    }
+  }, [product, getClosestStoreWithStock, selectedStore, selectStore]);
 
   // Dynamic availability check — only mark as "Out on Rental" when ZERO units remain
   useEffect(() => {
@@ -145,7 +157,8 @@ const ProductDetailPage = () => {
       startDate: sDate,
       endDate: eDate,
       pricing: { price: product.price, period_name: 'Daily Rate' },
-      deliveryMethod: 'delivery',
+      deliveryMethod: 'STORE_PICKUP',
+      store: selectedStore,
       quantity: rentQuantity
     });
     toast.success(`Added ${rentQuantity} unit(s) of ${product.name} to rental cart!`);
@@ -160,7 +173,8 @@ const ProductDetailPage = () => {
       startDate: sDate,
       endDate: eDate,
       pricing: { price: product.price, period_name: 'Daily Rate' },
-      deliveryMethod: 'delivery',
+      deliveryMethod: 'STORE_PICKUP',
+      store: selectedStore,
       quantity: rentQuantity
     });
     toast.success(`Proceeding to instant rental checkout!`);
@@ -359,6 +373,40 @@ const ProductDetailPage = () => {
                 <p className="text-xs text-[var(--text-muted)] font-medium leading-relaxed pt-1">
                   {product.short_description || product.description?.substring(0, 120)}
                 </p>
+              </div>
+
+              {/* Pickup Available At */}
+              <div className="p-4 rounded-3xl bg-[var(--bg-subtle)] border border-[var(--border)] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" /> Pickup Available At
+                  </span>
+                </div>
+
+                <div className="p-3.5 bg-[var(--bg-elevated)] rounded-2xl border border-[var(--border)] space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-black text-[var(--text)] leading-tight flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
+                        {selectedStore ? selectedStore.name : 'Park Street Lifestyle Store'}
+                      </p>
+                      <p className="text-[11px] text-[var(--text-muted)] mt-1.5 pl-5 leading-normal">
+                        {selectedStore?.address || '18 Park Street, Mullick Bazar, Kolkata, West Bengal'}
+                      </p>
+                    </div>
+                    {selectedStore?.distance_km !== null && selectedStore?.distance_km !== undefined && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                        ⚡ {selectedStore.distance_km} km
+                      </span>
+                    )}
+                  </div>
+                  {selectedStore && (
+                    <div className="pt-2 border-t border-[var(--border)] flex items-center justify-between text-[10px] text-[var(--text-muted)] pl-5">
+                      <span>Hours: {selectedStore.opening_time} - {selectedStore.closing_time}</span>
+                      {selectedStore.phone && <span>Ph: {selectedStore.phone}</span>}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Price Callout */}

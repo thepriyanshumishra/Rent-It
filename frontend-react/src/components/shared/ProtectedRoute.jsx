@@ -7,17 +7,14 @@ import Skeleton from '../ui/Skeleton';
  * ProtectedRoute — enforces authentication and role-based access.
  *
  * Usage:
- *   <ProtectedRoute />                  → any authenticated user
- *   <ProtectedRoute allowedRole="ADMIN"> → ADMIN only
- *   <ProtectedRoute allowedRole="RENTER"> → RENTER only
+ *   <ProtectedRoute />                   → any authenticated user
+ *   <ProtectedRoute allowedRole="STAFF"> → Vendor (STAFF role) only
  *
- * Redirect logic when the wrong role tries to access:
- *   ADMIN on a RENTER route  → /admin/dashboard
- *   RENTER on an ADMIN route → /renter/dashboard
- *   Anyone else              → /
+ * Two front-end portals exist: Vendor (/vendor) and Customer (/).
+ * Admin management is handled exclusively via Django Admin (/django-admin/).
  */
 const ProtectedRoute = ({ allowedRole = null, children }) => {
-  const { isAuthenticated, user, loading, isAdmin } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -34,28 +31,19 @@ const ProtectedRoute = ({ allowedRole = null, children }) => {
   }
 
   const role = String(user?.role || '').toUpperCase();
-  const isAdminUser = isAdmin || role === 'ADMIN' || user?.is_staff || user?.is_superuser;
-  const isLenderUser = role === 'LENDER';
+  const isVendorUser = role === 'STAFF';
 
   if (allowedRole) {
     const required = String(allowedRole).toUpperCase();
 
-    if (required === 'ADMIN') {
-      if (!isAdminUser) {
-        // Wrong role — send to correct portal
-        if (isLenderUser) return <Navigate to="/lender/dashboard" replace />;
-        return <Navigate to="/" replace />;
-      }
-    } else if (required === 'LENDER') {
-      if (!isLenderUser) {
-        if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
+    if (required === 'STAFF') {
+      if (!isVendorUser) {
         return <Navigate to="/" replace />;
       }
     } else {
       // Generic role check
       if (role !== required) {
-        if (isAdminUser) return <Navigate to="/admin/dashboard" replace />;
-        if (isLenderUser) return <Navigate to="/lender/dashboard" replace />;
+        if (isVendorUser) return <Navigate to="/vendor/dashboard" replace />;
         return <Navigate to="/" replace />;
       }
     }

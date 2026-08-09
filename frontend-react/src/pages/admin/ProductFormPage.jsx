@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
 import ProductForm from '../../components/admin/ProductForm';
 import { toast } from '../../components/ui/Toast';
@@ -9,7 +9,12 @@ import Spinner from '../../components/ui/Spinner';
 export default function ProductFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEditing = !!id;
+
+  // Determine context — vendor portal vs admin portal
+  const isVendorContext = location.pathname.startsWith('/vendor');
+  const backPath = isVendorContext ? '/vendor/listings' : '/admin/products';
 
   const [existingProduct, setExistingProduct] = useState(null);
   const [loadingProduct, setLoadingProduct] = useState(isEditing);
@@ -22,10 +27,10 @@ export default function ProductFormPage() {
       .then((res) => setExistingProduct(res.data))
       .catch(() => {
         toast.error('Failed to load product.');
-        navigate('/admin/products');
+        navigate(backPath);
       })
       .finally(() => setLoadingProduct(false));
-  }, [id, isEditing, navigate]);
+  }, [id, isEditing, navigate, backPath]);
 
   const handleSave = async (data) => {
     try {
@@ -35,7 +40,7 @@ export default function ProductFormPage() {
         await api.post('/products/', data);
       }
       toast.success(`Product successfully ${isEditing ? 'updated' : 'created'}.`);
-      navigate('/admin/products');
+      navigate(backPath);
     } catch (err) {
       const detail =
         err?.response?.data?.detail ||
@@ -49,7 +54,7 @@ export default function ProductFormPage() {
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       <div className="flex items-center gap-4">
         <Link
-          to="/admin/products"
+          to={backPath}
           className="p-2 bg-[var(--bg-elevated)] border border-[var(--border)] rounded-md text-[var(--text-secondary)] hover:text-[var(--text)] transition-colors"
         >
           <ChevronLeft size={20} />
@@ -72,9 +77,10 @@ export default function ProductFormPage() {
         <ProductForm
           product={existingProduct}
           onSave={handleSave}
-          onCancel={() => navigate('/admin/products')}
+          onCancel={() => navigate(backPath)}
         />
       )}
     </div>
   );
 }
+

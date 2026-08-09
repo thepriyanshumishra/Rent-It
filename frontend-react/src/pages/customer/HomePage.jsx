@@ -23,8 +23,8 @@ const HomePage = () => {
   });
 
   const { data: featuredProducts, isLoading: featuredLoading } = useQuery({
-    queryKey: ['products', 'featured'],
-    queryFn: () => productsApi.getProducts({ is_featured: true })
+    queryKey: ['products', 'home'],
+    queryFn: () => productsApi.getProducts()
   });
 
   const categories = [
@@ -188,7 +188,7 @@ const HomePage = () => {
         <div className="flex justify-between items-end mb-10">
           <div>
             <span className="text-xs font-bold text-accent uppercase tracking-wider">Curated Catalog</span>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-text mt-1">Featured Rentals</h2>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-text mt-1">Top Equipment Rentals</h2>
           </div>
           <Button variant="ghost" onClick={() => navigate('/explore')} className="flex items-center gap-1 font-bold text-sm">
             View All Rentals <ChevronRight className="w-4 h-4" />

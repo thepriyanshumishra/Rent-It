@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, Sparkles, Package, ArrowUpRight } from 'lucide-react';
 import Button from '../ui/Button';
+import { useStore } from '../../context/StoreContext';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
 const sampleImageFallbackMap = {
   'sony fx3': 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=800&q=80',
@@ -16,6 +18,7 @@ const sampleImageFallbackMap = {
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
+  const { selectedStore, getClosestStoreWithStock } = useStore();
   const [imgError, setImgError] = useState(false);
 
   if (!product) return null;
@@ -23,26 +26,10 @@ const ProductCard = ({ product }) => {
   const {
     id, name, slug, short_description, images, primary_image,
     category, category_name, pricings, price, security_deposit,
-    is_featured
   } = product;
 
   // Resolve image URL cleanly
-  let imageUrl = primary_image || product.image_url || product.image;
-  if (!imageUrl && images && images.length > 0) {
-    const first = images[0];
-    imageUrl = typeof first === 'string' ? first : (first.url || first.image_url || first.image);
-  }
-
-  // Fallback to high quality photography image if missing or error
-  if (!imageUrl || imgError) {
-    const lname = name?.toLowerCase() || '';
-    for (const [key, fallbackUrl] of Object.entries(sampleImageFallbackMap)) {
-      if (lname.includes(key)) {
-        imageUrl = fallbackUrl;
-        break;
-      }
-    }
-  }
+  const imageUrl = getProductImageUrl(product, name);
 
   const cheapestPricing = pricings && pricings.length > 0 
     ? [...pricings].sort((a, b) => parseFloat(a.price) - parseFloat(b.price))[0] 
@@ -68,15 +55,6 @@ const ProductCard = ({ product }) => {
       whileHover={{ y: -4 }}
       onClick={() => navigate(`/product/${slug || id}`)}
     >
-      {/* Featured Badge */}
-      {is_featured && (
-        <div className="absolute top-3.5 left-3.5 z-10">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-[var(--accent)] text-white shadow-md">
-            <Sparkles className="w-3 h-3" /> HQ Featured
-          </span>
-        </div>
-      )}
-
       {/* Dynamic Stock Status Badge */}
       <div className="absolute top-3.5 right-3.5 z-10">
         {isInStock ? (
@@ -122,11 +100,21 @@ const ProductCard = ({ product }) => {
           {formatDescription(short_description)}
         </p>
         
-        {/* Deposit Tag */}
-        <div className="pt-2">
+        {/* Deposit & Nearest Store Tag */}
+        <div className="pt-2 flex flex-wrap items-center gap-1.5">
           <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border)] text-[10px] font-bold text-[var(--text-secondary)] inline-block">
-            Security Deposit: <strong className="text-[var(--text)] font-extrabold">₹{Number(depositAmount).toLocaleString()}</strong>
+            Deposit: <strong className="text-[var(--text)] font-extrabold">₹{Number(depositAmount).toLocaleString()}</strong>
           </span>
+
+          {(() => {
+            const targetStore = product._closestStore || (getClosestStoreWithStock ? getClosestStoreWithStock(product.id) : selectedStore);
+            if (!targetStore) return null;
+            return (
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 inline-flex items-center gap-1">
+                📍 {targetStore.name} {targetStore.distance_km !== null && targetStore.distance_km !== undefined ? `(${targetStore.distance_km} km)` : ''}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Footer Rate & Action */}

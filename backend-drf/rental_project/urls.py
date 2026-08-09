@@ -9,23 +9,20 @@ urlpatterns = [
     # Authentication & User management
     path('api/auth/', include('apps.accounts.urls')),
 
-    # Products, Categories & Renter Listing Requests
+    # Products & Categories
     path('api/', include('apps.products.urls')),
+
+    # Stores & Physical Hubs
+    path('api/', include('apps.stores.urls')),
 
     # Rentals (Cart + Orders)
     path('api/rentals/', include('apps.rentals.urls')),
 
-    # Payments
-    path('api/payments/', include('apps.payments.urls')),
-
     # Notifications
     path('api/notifications/', include('apps.notifications.urls')),
 
-    # Reports & Dashboard
+    # Reports & Dashboard stats (admin use)
     path('api/reports/', include('apps.reports.urls')),
-
-    # AI Insights (optional)
-    path('api/ai/', include('apps.ai_insights.urls')),
 ]
 
 # Serve media files in development

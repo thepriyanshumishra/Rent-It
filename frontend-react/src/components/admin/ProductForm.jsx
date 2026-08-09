@@ -22,7 +22,6 @@ export default function ProductForm({ product = null, onSave, onCancel, loading 
     included_items: product?.included_items || '',
     rental_terms: product?.rental_terms || '',
     is_active: product?.is_active ?? true,
-    is_featured: product?.is_featured ?? false,
     images: Array.isArray(product?.images) 
       ? product.images.map(img => img.image_url || img.url || img.image).filter(Boolean)
       : (product?.image_url ? [product.image_url] : []),
@@ -210,17 +209,6 @@ export default function ProductForm({ product = null, onSave, onCancel, loading 
               className="rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] w-4 h-4"
             />
             <span className="text-xs font-extrabold text-[var(--text)]">Active & Visible on Storefront</span>
-          </label>
-
-          <label className="flex items-center gap-2 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              name="is_featured"
-              checked={formData.is_featured}
-              onChange={handleChange}
-              className="rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] w-4 h-4"
-            />
-            <span className="text-xs font-extrabold text-[var(--text)]">Featured Equipment (Homepage Banner)</span>
           </label>
         </div>
       </div>

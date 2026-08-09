@@ -17,14 +17,14 @@ class DashboardStatsView(APIView):
             now = timezone.now()
             thirty_days_ago = now - timedelta(days=30)
 
-            total_rentals = RentalOrder.objects.count()
-            active_rentals = RentalOrder.objects.filter(status='ACTIVE').count()
-            overdue_rentals = RentalOrder.objects.filter(status='OVERDUE').count()
-            returned_rentals = RentalOrder.objects.filter(status='RETURNED').count()
-            completed_rentals = RentalOrder.objects.filter(status='COMPLETED').count()
+            total_rentals   = RentalOrder.objects.count()
+            active_rentals  = RentalOrder.objects.filter(status__in=['PICKED_UP', 'LATE_RETURN']).count()
+            overdue_rentals = RentalOrder.objects.filter(status='LATE_RETURN').count()
+            returned_rentals   = RentalOrder.objects.filter(status='RETURNED').count()
+            cancelled_rentals  = RentalOrder.objects.filter(status='CANCELLED').count()
 
             revenue_result = RentalOrder.objects.filter(
-                status__in=['COMPLETED', 'RETURNED', 'ACTIVE'],
+                status__in=['PICKED_UP', 'LATE_RETURN', 'RETURNED'],
                 created_at__gte=thirty_days_ago
             ).aggregate(total=Sum('total_amount'))
             revenue_this_month = float(revenue_result['total'] or 0)
@@ -32,24 +32,20 @@ class DashboardStatsView(APIView):
             new_users = User.objects.filter(date_joined__gte=thirty_days_ago).count()
 
             data = {
-                "total_rentals": total_rentals,
-                "active_rentals": active_rentals,
-                "overdue_rentals": overdue_rentals,
-                "returned_rentals": returned_rentals,
-                "completed_rentals": completed_rentals,
-                "revenue_this_month": revenue_this_month,
-                "new_users": new_users,
+                'total_rentals':    total_rentals,
+                'active_rentals':   active_rentals,
+                'overdue_rentals':  overdue_rentals,
+                'returned_rentals': returned_rentals,
+                'cancelled_rentals': cancelled_rentals,
+                'revenue_this_month': revenue_this_month,
+                'new_users': new_users,
             }
         except Exception as e:
             data = {
-                "total_rentals": 0,
-                "active_rentals": 0,
-                "overdue_rentals": 0,
-                "returned_rentals": 0,
-                "completed_rentals": 0,
-                "revenue_this_month": 0,
-                "new_users": 0,
-                "error": str(e),
+                'total_rentals': 0, 'active_rentals': 0,
+                'overdue_rentals': 0, 'returned_rentals': 0,
+                'cancelled_rentals': 0, 'revenue_this_month': 0,
+                'new_users': 0, 'error': str(e),
             }
 
         return Response(data)
@@ -68,8 +64,8 @@ class RevenueReportView(APIView):
             six_months_ago = timezone.now() - timedelta(days=180)
             monthly_revenue = (
                 RentalOrder.objects.filter(
-                    status__in=['COMPLETED', 'RETURNED', 'ACTIVE'],
-                    created_at__gte=six_months_ago
+                    status__in=['PICKED_UP', 'LATE_RETURN', 'RETURNED'],
+                    created_at__gte=six_months_ago,
                 )
                 .annotate(month=TruncMonth('created_at'))
                 .values('month')

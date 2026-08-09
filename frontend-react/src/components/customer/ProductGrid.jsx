@@ -72,7 +72,7 @@ const ProductGrid = ({ products = [], loading = false, columns = 3 }) => {
     >
       {items.map(product => (
         <motion.div
-          key={product.id}
+          key={product.listingKey || product.id}
           variants={{
             hidden: { opacity: 0, y: 20 },
             visible: { opacity: 1, y: 0 }

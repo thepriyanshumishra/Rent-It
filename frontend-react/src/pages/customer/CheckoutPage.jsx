@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { 
   Truck, Shield, AlertCircle, Package, ArrowLeft, ArrowRight, 
-  CheckCircle2, Lock, ShieldCheck, MapPin, User, Phone, CreditCard
+  CheckCircle2, Lock, ShieldCheck, MapPin, User, Phone, CreditCard,
+  Building2, Clock
 } from 'lucide-react';
 import PageTransition from '../../components/shared/PageTransition';
 import CheckoutSteps from '../../components/customer/CheckoutSteps';
@@ -10,57 +12,47 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import useCart from '../../hooks/useCart';
 import useAuth from '../../hooks/useAuth';
+import { useStore } from '../../context/StoreContext';
 import { toast } from '../../components/ui/Toast';
+import { getProductImageUrl } from '../../utils/imageUtils';
 import * as rentalsApi from '../../api/rentals';
 
-const sampleProductMap = {
-  1: { name: 'Sony FX3 Cinema Camera Kit', price: 2500, deposit: 10000, category: 'Cameras & Video' },
-  2: { name: 'Apple MacBook Pro 16" M3 Max', price: 3000, deposit: 15000, category: 'Electronics' },
-  3: { name: 'Super73-RX Electric Adventure Bike', price: 1800, deposit: 5000, category: 'Vehicles & E-Bikes' },
-  4: { name: 'DJI Inspire 3 Cinema Drone 8K', price: 8000, deposit: 25000, category: 'Cameras & Video' },
-  5: { name: 'Herman Miller Aeron Ergonomic Chair', price: 600, deposit: 3000, category: 'Office Furniture' },
-  6: { name: 'JBL PartyBox Ultimate PA System', price: 2000, deposit: 8000, category: 'Audio & Sound' },
-  7: { name: 'EcoFlow Delta Pro Power Station', price: 1500, deposit: 6000, category: 'Event & Outdoor' },
-  8: { name: 'Apple Vision Pro 512GB VR Headset', price: 4000, deposit: 20000, category: 'Electronics' }
-};
 
 const getItemPrice = (item) => {
   const p = parseFloat(item.product?.price ?? item.price ?? 0);
-  if (p > 0) return p;
-  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id];
-  return fallback ? fallback.price : 0;
+  return p > 0 ? p : 0;
 };
 
 const getItemDeposit = (item) => {
-  const prodDep = item.product?.security_deposit ?? item.security_deposit ?? item.securityDeposit;
-  if (prodDep !== undefined && prodDep !== null && !isNaN(parseFloat(prodDep))) {
-    return parseFloat(prodDep);
-  }
-  const firstPricing = item.product?.pricings?.[0];
-  const d = parseFloat(firstPricing?.security_deposit || 0);
-  if (d > 0) return d;
-  const fallback = sampleProductMap[item.product_id] || sampleProductMap[item.id];
-  return fallback ? fallback.deposit : 0;
+  const d = item.product?.security_deposit ?? item.security_deposit ?? item.securityDeposit ?? 0;
+  return parseFloat(d) || 0;
 };
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const { cart, clearCart, removeItem, updateItem } = useCart();
   const { user } = useAuth();
+  const { selectedStore, openStoreModal } = useStore();
+
+  const queryParams = new URLSearchParams(location.search);
+  const storeIdParam = queryParams.get('storeId');
   
   const [step, setStep] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [deliveryMethod, setDeliveryMethod] = useState('STORE_PICKUP');
   
-  // Smart pre-filled address state
+  // Address state — blank by default, prefill from user profile if available
   const [address, setAddress] = useState({
-    name: user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Priyanshu Mishra' : 'Priyanshu Mishra',
-    phone: user?.phone || '+91 98765 43210',
-    line1: 'B-104, Tech Park Enclave',
-    line2: 'Sector 62',
-    city: 'Noida',
-    state: 'Uttar Pradesh',
-    zip: '201309'
+    name: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    zip: ''
   });
 
   useEffect(() => {
@@ -68,15 +60,15 @@ const CheckoutPage = () => {
       setAddress(prev => ({
         ...prev,
         name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || prev.name,
-        phone: user.phone || prev.phone
+        phone: user.phone_number || user.phone || prev.phone
       }));
     }
   }, [user]);
 
-  // 3 Streamlined steps (Store pickup removed)
+  // 3 Streamlined steps
   const steps = [
     { label: 'Review Items' },
-    { label: 'Delivery Address' },
+    { label: 'Delivery / Pickup' },
     { label: 'Payment & Escrow' }
   ];
 
@@ -90,7 +82,15 @@ const getDays = (item) => {
   return diff > 0 ? diff : 1;
 };
 
-  const itemsList = cart?.items || [];
+  // Filter items by storeId parameter if present
+  const itemsList = (cart?.items || []).filter(item => {
+    if (!storeIdParam) return true;
+    const itemStoreId = item.store?.id || item.product?.store?.id || item.product?.store_id;
+    return itemStoreId ? String(itemStoreId) === String(storeIdParam) : true;
+  });
+
+  // Resolve store for checkout
+  const checkoutStore = itemsList[0]?.store || selectedStore;
   
   let calcRental = 0;
   let calcDeposit = 0;
@@ -135,45 +135,64 @@ const getDays = (item) => {
 
   const handlePayment = async () => {
     setIsProcessing(true);
+
+    // Validate address for delivery orders
+    if (deliveryMethod === 'DELIVERY' && (!address.line1 || !address.city || !address.zip)) {
+      toast.error('Please fill in your delivery address.');
+      setIsProcessing(false);
+      return;
+    }
+
     let realOrder = null;
 
     try {
+      const fullAddress = deliveryMethod === 'DELIVERY'
+        ? `${address.name}, ${address.line1}${address.line2 ? ', ' + address.line2 : ''}, ${address.city}, ${address.state}`
+        : 'Store Pickup';
+
+      const chosenSlot = itemsList[0]?.pickup_slot || 'MORNING_10_1';
+
       const res = await rentalsApi.checkoutCart({
-        delivery_address: `${address.line1}, ${address.line2}, ${address.city}, ${address.state}`,
-        delivery_pincode: address.zip,
-        fulfillment_type: 'DOORSTEP',
+        store_id: checkoutStore?.id || selectedStore?.id,
+        pickup_slot: chosenSlot,
+        delivery_method: deliveryMethod,
+        delivery_address: fullAddress,
+        delivery_pincode: address.zip || '',
         total_amount: calculatedTotal,
-        items: itemsList
+        items: itemsList.map(item => ({
+          product_id: item.product?.id || item.product_id || item.id,
+          quantity: item.quantity || 1,
+          startDate: item.start_date || item.startDate,
+          endDate: item.end_date || item.endDate,
+        }))
       });
       if (res?.data) {
         realOrder = res.data;
       }
     } catch (err) {
-      console.warn('Backend order API skipped/fallback', err);
+      console.error('Checkout API error:', err);
+      toast.error(err?.response?.data?.detail || 'Checkout failed. Please try again.');
+      setIsProcessing(false);
+      return;
     }
 
-    const orderIdToUse = realOrder?.id || realOrder?.order_number || `RNT-${Math.floor(100000 + Math.random() * 900000)}`;
+    const orderIdToUse = realOrder?.id || realOrder?.order_number;
+    if (!orderIdToUse) {
+      toast.error('Order creation failed — no order ID returned.');
+      setIsProcessing(false);
+      return;
+    }
 
-    const newOrderObj = {
-      id: orderIdToUse,
-      order_number: realOrder?.order_number || orderIdToUse,
-      status: 'active',
-      items: itemsList,
-      rental_amount: calcRental,
-      deposit_amount: calcDeposit,
-      total_price: calculatedTotal,
-      delivery_method: 'delivery',
-      address: address,
-      user: user ? { id: user.id, email: user.email, name: user.full_name || user.first_name || user.username } : null,
-      created_at: new Date().toISOString(),
-      start_date: itemsList[0]?.start_date || itemsList[0]?.startDate || new Date().toISOString().split('T')[0],
-      end_date: itemsList[0]?.end_date || itemsList[0]?.endDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-      product: itemsList[0]?.product || { name: sampleProductMap[itemsList[0]?.product_id || 3]?.name || 'Super73-RX Electric Adventure Bike' }
-    };
+    // Remove only checked out items from cart
+    for (const item of itemsList) {
+      removeItem(item.id);
+    }
+    
+    // Invalidate product & stock queries so stock decrements globally for all users
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['store-stocks'] });
+    queryClient.invalidateQueries({ queryKey: ['my-rentals'] });
 
-    saveOrderToStorage(newOrderObj);
-
-    clearCart();
     toast.success('Rental order reserved successfully!');
     setIsProcessing(false);
     navigate(`/order-confirmation/${orderIdToUse}`);
@@ -220,15 +239,10 @@ const getDays = (item) => {
                   <div className="space-y-3">
                     {itemsList.map(item => {
                       const product = item.product || {};
-                      const fallbackInfo = sampleProductMap[item.product_id] || sampleProductMap[item.id] || sampleProductMap[3];
-                      const productName = product.name || fallbackInfo?.name;
-                      const categoryName = product.category_name || product.category || fallbackInfo?.category;
+                      const productName = product.name || item.name || 'Rental Equipment';
+                      const categoryName = product.category_name || product.category || 'Equipment';
 
-                      let imageUrl = product.primary_image;
-                      if (!imageUrl && product.images && product.images.length > 0) {
-                        const first = product.images[0];
-                        imageUrl = typeof first === 'string' ? first : (first.url || first.image_url);
-                      }
+                      const imageUrl = getProductImageUrl(product, productName);
 
                       const itemPrice = getItemPrice(item);
                       const itemDeposit = getItemDeposit(item);
@@ -254,14 +268,8 @@ const getDays = (item) => {
                       return (
                         <div key={item.id} className="flex flex-col sm:flex-row gap-4 p-4 rounded-2xl border border-[var(--border)] bg-[var(--bg-subtle)]">
                           {/* Thumbnail */}
-                          <div className="w-16 h-16 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden shrink-0">
-                            {imageUrl ? (
-                              <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[var(--accent)] bg-[var(--accent-subtle)]">
-                                <Package className="w-6 h-6" />
-                              </div>
-                            )}
+                          <div className="w-16 h-16 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border)] overflow-hidden shrink-0 relative">
+                            <img src={imageUrl} alt={productName} className="w-full h-full object-cover" />
                           </div>
 
                           {/* Info */}
@@ -332,71 +340,44 @@ const getDays = (item) => {
                 <div className="space-y-6 animate-in fade-in duration-200">
                   <div>
                     <h2 className="text-lg font-black text-[var(--text)] flex items-center gap-2">
-                      <Truck className="w-5 h-5 text-[var(--accent)]" /> Doorstep Delivery Address
+                      <Truck className="w-5 h-5 text-[var(--accent)]" /> Selected Pickup Hub
                     </h2>
-                    <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5">Specify where you want your rental equipment delivered and picked up.</p>
+                    <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5">Collect your equipment from this designated store location.</p>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Recipient Full Name</label>
-                      <Input 
-                        value={address.name} 
-                        onChange={e => setAddress({...address, name: e.target.value})} 
-                        placeholder="John Doe" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
-                    </div>
-                    
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Phone Number (for Courier Pickup Updates)</label>
-                      <Input 
-                        value={address.phone} 
-                        onChange={e => setAddress({...address, phone: e.target.value})} 
-                        placeholder="+91 98765 43210" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
+                  <div className="p-5 rounded-2xl bg-[var(--accent-subtle)] border border-[var(--accent)]/40 text-xs text-[var(--text-secondary)] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-extrabold text-sm text-[var(--accent)] flex items-center gap-1.5">
+                        <Building2 className="w-4 h-4" /> Selected Store Location
+                      </span>
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">House / Flat No. & Building Name</label>
-                      <Input 
-                        value={address.line1} 
-                        onChange={e => setAddress({...address, line1: e.target.value})} 
-                        placeholder="Flat 402, Block B, Tech Apartments" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
+                    <div className="bg-[var(--bg-elevated)] p-3.5 rounded-xl border border-[var(--border)] space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-[var(--text)] text-sm">
+                          {checkoutStore ? checkoutStore.name : 'RentIt Flagship Hub'}
+                        </span>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] uppercase">
+                          {checkoutStore?.code || 'DEL-CP-01'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[var(--text-secondary)] flex items-start gap-1">
+                        <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[var(--accent)]" />
+                        {checkoutStore?.address || 'B-42, Inner Circle, Connaught Place'}, {checkoutStore?.city || 'New Delhi'} – {checkoutStore?.pincode || '110001'}
+                      </p>
+                      <div className="flex items-center gap-4 text-[11px] text-[var(--text-muted)] pt-1 border-t border-[var(--border)]">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-[var(--accent)]" /> {checkoutStore?.opening_time || '10:00 AM'} – {checkoutStore?.closing_time || '08:00 PM'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-[var(--text-muted)]" /> {checkoutStore?.phone || '+91 98112 34567'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="sm:col-span-2">
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Street & Landmark</label>
-                      <Input 
-                        value={address.line2} 
-                        onChange={e => setAddress({...address, line2: e.target.value})} 
-                        placeholder="Near Metro Station" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">City</label>
-                      <Input 
-                        value={address.city} 
-                        onChange={e => setAddress({...address, city: e.target.value})} 
-                        placeholder="New Delhi" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">Pincode</label>
-                      <Input 
-                        value={address.zip} 
-                        onChange={e => setAddress({...address, zip: e.target.value})} 
-                        placeholder="110001" 
-                        className="bg-[var(--bg-subtle)] border-[var(--border)] rounded-xl text-xs font-bold" 
-                      />
-                    </div>
+                    <p className="text-[11px] text-[var(--text-muted)] italic">
+                      ℹ️ Present your printable Quotation & Pickup QR slip at the store counter for instant collection.
+                    </p>
                   </div>
 
                   <div className="pt-4 border-t border-[var(--border)] flex justify-between">

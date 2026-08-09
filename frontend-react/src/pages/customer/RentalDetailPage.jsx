@@ -9,25 +9,30 @@ import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import PriceDisplay from '../../components/ui/PriceDisplay';
 import Skeleton from '../../components/ui/Skeleton';
+import QuotationSlipModal from '../../components/shared/QuotationSlipModal';
 import * as rentalsApi from '../../api/rentals';
 import * as invoicesApi from '../../api/invoices';
 import { toast } from '../../components/ui/Toast';
+import { getProductImageUrl } from '../../utils/imageUtils';
 
-const sampleProductMap = {
-  1: { name: 'Sony FX3 Cinema Camera Kit', price: 2500, deposit: 10000, category: 'Cameras & Video' },
-  2: { name: 'Apple MacBook Pro 16" M3 Max', price: 3000, deposit: 15000, category: 'Electronics' },
-  3: { name: 'Super73-RX Electric Adventure Bike', price: 1800, deposit: 5000, category: 'Vehicles & E-Bikes' },
-  4: { name: 'DJI Inspire 3 Cinema Drone 8K', price: 8000, deposit: 25000, category: 'Cameras & Video' },
-  5: { name: 'Herman Miller Aeron Ergonomic Chair', price: 600, deposit: 3000, category: 'Office Furniture' },
-  6: { name: 'JBL PartyBox Ultimate PA System', price: 2000, deposit: 8000, category: 'Audio & Sound' },
-  7: { name: 'EcoFlow Delta Pro Power Station', price: 1500, deposit: 6000, category: 'Event & Outdoor' },
-  8: { name: 'Apple Vision Pro 512GB VR Headset', price: 4000, deposit: 20000, category: 'Electronics' }
+const STATUS_META = {
+  QUOTATION:      { label: 'Quotation',     color: '#94a3b8' },
+  QUOTATION_SENT: { label: 'Sent',          color: '#f59e0b' },
+  RESERVED:       { label: 'Confirmed',     color: '#3b82f6' },
+  PICKED_UP:      { label: 'Picked Up',     color: 'var(--accent)' },
+  ACTIVE:         { label: 'Active',        color: 'var(--accent)' },
+  LATE_RETURN:    { label: 'Overdue ⚠️',   color: '#ef4444' },
+  RETURNED:       { label: 'Returned',      color: '#10b981' },
+  CANCELLED:      { label: 'Cancelled',     color: '#ef4444' },
 };
+
+const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 const RentalDetailPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('details');
+  const [isSlipOpen, setIsSlipOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['order', orderId],
@@ -54,51 +59,35 @@ const RentalDetailPage = () => {
     );
   }
 
-  // Resolve order from local storage or API data
-  let localOrders = [];
-  try {
-    const stored = localStorage.getItem('rentos_placed_orders');
-    if (stored) localOrders = JSON.parse(stored);
-  } catch (e) {
-    console.warn('LocalStorage read error', e);
+  // Use only real API data — no localStorage, no fake fallbacks
+  const order = data?.data || (Array.isArray(data?.data?.results) ? null : null);
+
+  // Not found state
+  if (!isLoading && !order) {
+    return (
+      <PageTransition>
+        <div className="max-w-xl mx-auto px-4 py-20 text-center">
+          <h2 className="text-2xl font-bold text-[var(--text)] mb-3">Order Not Found</h2>
+          <p className="text-[var(--text-muted)] mb-6">We couldn't find rental order <strong>{orderId}</strong>.</p>
+          <button onClick={() => navigate('/my-rentals')} className="px-6 py-2.5 rounded-2xl bg-[var(--accent)] text-white font-bold text-sm">
+            Back to My Rentals
+          </button>
+        </div>
+      </PageTransition>
+    );
   }
 
-  const foundLocal = localOrders.find(o => o.id === orderId || o.order_number === orderId);
-  const apiOrder = data?.data;
+  const statusMeta = STATUS_META[order?.status] || { label: order?.status || 'Unknown', color: 'var(--text-muted)' };
+  const firstItem = order?.items?.[0];
+  const productName = firstItem?.product_name_display || firstItem?.product_name || firstItem?.product?.name || 'Rental Item';
+  const categoryName = firstItem?.product?.category_name || '—';
+  const startDate = order?.rental_start_date || order?.start_date;
+  const endDate   = order?.rental_end_date   || order?.end_date;
+  const rentalFee = parseFloat(order?.total_amount || 0);
+  const depositFee = parseFloat(order?.deposit_amount || 0);
+  const totalPaid = rentalFee + depositFee;
+  const deliveryMethod = order?.delivery_method || 'STORE_PICKUP';
 
-  const order = foundLocal || apiOrder || {
-    id: orderId,
-    order_number: orderId,
-    status: 'active',
-    rental_amount: 1800,
-    deposit_amount: 5000,
-    total_price: 6800,
-    delivery_method: 'delivery',
-    created_at: new Date().toISOString(),
-    start_date: new Date().toISOString().split('T')[0],
-    end_date: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-    product: { 
-      name: 'Super73-RX Electric Adventure Bike', 
-      category_name: 'Vehicles & E-Bikes',
-      short_description: 'High-performance electric adventure bike with long-range battery and full suspension.'
-    },
-    address: {
-      name: 'John Doe',
-      phone: '+91 98765 43210',
-      line1: '123 Main Street',
-      line2: 'Suite 4B',
-      city: 'New Delhi',
-      zip: '110001'
-    }
-  };
-
-  const productName = order.product?.name || order.items?.[0]?.product?.name || 'Super73-RX Electric Adventure Bike';
-  const categoryName = order.product?.category_name || order.product?.category || 'Vehicles & E-Bikes';
-  const startDate = order.start_date || new Date().toISOString().split('T')[0];
-  const endDate = order.end_date || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0];
-  const rentalFee = parseFloat(order.rental_amount || 1800);
-  const depositFee = parseFloat(order.deposit_amount || 5000);
-  const totalPaid = parseFloat(order.total_price || rentalFee + depositFee);
 
   return (
     <PageTransition>
@@ -117,30 +106,56 @@ const RentalDetailPage = () => {
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <span className="text-xs font-bold text-accent uppercase tracking-wider">{order.order_number || orderId}</span>
-                <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full text-xs font-extrabold bg-success/10 text-success border border-success/20">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Active Rental
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  padding: '2px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                  background: `${statusMeta.color}22`, color: statusMeta.color, border: `1px solid ${statusMeta.color}44`
+                }}>
+                  <ShieldCheck className="w-3.5 h-3.5" /> {statusMeta.label}
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-text mt-1">{productName}</h1>
             </div>
             <div className="text-left md:text-right bg-bg-subtle px-4 py-2.5 rounded-2xl border border-border">
               <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Rental Duration</p>
-              <p className="font-extrabold text-text text-sm mt-0.5">{startDate} → {endDate}</p>
+              <p className="font-extrabold text-text text-sm mt-0.5">{fmtDate(startDate)} → {fmtDate(endDate)}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-accent-subtle text-accent flex items-center justify-center shrink-0">
-              <Package className="w-8 h-8" />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-border">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-accent-subtle overflow-hidden border border-border shrink-0 relative">
+                <img 
+                  src={getProductImageUrl(order.product, productName)} 
+                  alt={productName} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-accent uppercase tracking-wider">{categoryName}</span>
+                <p className="text-xs text-text-muted line-clamp-1 mt-0.5 font-medium">
+                  {order.store_name ? `Pickup Hub: ${order.store_name}` : 'RentIt Enterprise Fleet Equipment'}
+                </p>
+              </div>
             </div>
-            <div>
-              <span className="text-[11px] font-bold text-accent uppercase tracking-wider">{categoryName}</span>
-              <p className="text-xs text-text-muted line-clamp-2 mt-0.5 font-medium leading-relaxed">
-                {order.product?.short_description || 'Premium rental equipment inspected for maximum performance and reliability.'}
-              </p>
-            </div>
+
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setIsSlipOpen(true)}
+              className="rounded-xl font-bold text-xs shrink-0 self-start sm:self-auto"
+            >
+              📄 View Quotation Slip
+            </Button>
           </div>
         </div>
+
+        {/* Quotation Slip Modal */}
+        <QuotationSlipModal
+          isOpen={isSlipOpen}
+          onClose={() => setIsSlipOpen(false)}
+          order={order}
+        />
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

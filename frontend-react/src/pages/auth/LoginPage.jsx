@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Sun, Moon, Sparkles, UserCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Sun, Moon, Sparkles, UserCheck } from 'lucide-react';
 import useAuth from '../../hooks/useAuth';
 import { ThemeContext } from '../../context/ThemeContext';
 import Button from '../../components/ui/Button';
 import { toast } from '../../components/ui/Toast';
 
 const LoginPage = () => {
+  const [roleMode, setRoleMode] = useState('CUSTOMER'); // 'CUSTOMER' or 'VENDOR'
   const [formData, setFormData] = useState({ identifier: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,10 +21,10 @@ const LoginPage = () => {
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'ADMIN' || user.role === 'admin' || user.is_staff || user.is_superuser) {
-        navigate('/admin/dashboard', { replace: true });
-      } else if (user.role === 'LENDER') {
-        navigate('/lender/dashboard', { replace: true });
+      if (user.role === 'STAFF') {
+        navigate('/vendor/dashboard', { replace: true });
+      } else {
+        navigate('/explore', { replace: true });
       }
     }
   }, [user, navigate]);
@@ -32,20 +33,16 @@ const LoginPage = () => {
     setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
   };
 
-  const handleQuickDemoLogin = async (identifier, password) => {
+  const handleQuickDemoLogin = async (identifier, password, intendedMode) => {
     setLoading(true);
     setFormData({ identifier, password });
     try {
       const loggedInUser = await login({ email: identifier, username: identifier, password });
       toast.success(`Signed in as ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
-      const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
-      const isUserLender = loggedInUser.role === 'LENDER' || loggedInUser.role === 'lender';
-
-      if (isUserAdmin) {
-        navigate('/admin/dashboard', { replace: true });
-      } else if (isUserLender) {
-        navigate('/lender/dashboard', { replace: true });
+      const role = String(loggedInUser.role || '').toUpperCase();
+      if (role === 'STAFF' || intendedMode === 'VENDOR') {
+        navigate('/vendor/dashboard', { replace: true });
       } else {
         navigate('/explore', { replace: true });
       }
@@ -68,15 +65,20 @@ const LoginPage = () => {
         username: formData.identifier,
         password: formData.password
       });
+      
+      const role = String(loggedInUser.role || '').toUpperCase();
+      
+      // Verification of role matching selected mode
+      if (roleMode === 'VENDOR' && role !== 'STAFF') {
+        toast.error('This user does not have vendor privileges.');
+        setLoading(false);
+        return;
+      }
+      
       toast.success(`Welcome back, ${loggedInUser.first_name || loggedInUser.username || loggedInUser.email}!`);
       
-      const isUserAdmin = loggedInUser.role === 'ADMIN' || loggedInUser.role === 'admin' || loggedInUser.is_staff || loggedInUser.is_superuser;
-      const isUserLender = loggedInUser.role === 'LENDER' || loggedInUser.role === 'lender';
-
-      if (isUserAdmin) {
-        navigate('/admin/dashboard', { replace: true });
-      } else if (isUserLender) {
-        navigate('/lender/dashboard', { replace: true });
+      if (role === 'STAFF') {
+        navigate('/vendor/dashboard', { replace: true });
       } else {
         navigate(from !== '/' && from !== '/login' ? from : '/explore', { replace: true });
       }
@@ -112,72 +114,51 @@ const LoginPage = () => {
         initial={{ opacity: 0, y: 25, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.3 }}
-        className="w-full max-w-md z-10 my-auto"
+        className="w-full max-w-md z-10 my-auto flex flex-col gap-4"
       >
         <div className="card p-8 sm:p-10 shadow-2xl border border-[var(--border)] bg-[var(--bg-elevated)] rounded-3xl relative overflow-hidden">
-          <div className="text-center mb-8">
+          <div className="text-center mb-6">
             <Link to="/" className="inline-block mb-3">
               <div className="w-12 h-12 rounded-2xl bg-[var(--accent)] text-white font-black text-2xl flex items-center justify-center mx-auto shadow-lg hover:scale-105 transition-transform">
                 R
               </div>
             </Link>
-            <h1 className="text-3xl font-black text-[var(--text)] mb-1 tracking-tight">Sign In to RentIt</h1>
+            <h1 className="text-3xl font-black text-[var(--text)] mb-1 tracking-tight">
+              {roleMode === 'CUSTOMER' ? 'Customer Sign In' : 'Vendor Sign In'}
+            </h1>
             <p className="text-xs font-semibold text-[var(--text-muted)]">Enterprise Equipment & Asset Rental Management</p>
           </div>
 
-          {/* Quick Instant Demo Access Buttons */}
-          <div className="mb-6 p-3 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border)]">
-            <p className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-wider mb-2.5 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 1-Click Instant Demo Login
-              </span>
-              <span className="text-[9px] text-emerald-500 font-extrabold">AUTO AUTH</span>
-            </p>
-            <div className="grid grid-cols-3 gap-1.5 mb-2">
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickDemoLogin('lender', 'Password123!')}
-                className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
-              >
-                <Sparkles className="w-3 h-3" /> Lender
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickDemoLogin('admin', 'Password123!')}
-                className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500 hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
-              >
-                <ShieldCheck className="w-3 h-3" /> HQ Admin
-              </button>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickDemoLogin('customer', 'Password123!')}
-                className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--bg-elevated)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--text)] hover:text-[var(--bg)] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
-              >
-                <UserCheck className="w-3 h-3" /> Customer
-              </button>
-            </div>
-            
-            {/* Django Super Admin Direct Quick Auth */}
-            <div className="flex items-center justify-between pt-2 border-t border-[var(--border)] text-[10px]">
-              <span className="text-[var(--text-muted)] font-medium">Django SuperAdmin: <strong className="text-[var(--text)] font-bold">djangoadmin</strong></span>
-              <button
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickDemoLogin('djangoadmin', 'Password123!')}
-                className="text-[var(--accent)] hover:underline font-extrabold cursor-pointer"
-              >
-                Quick Login
-              </button>
-            </div>
+          {/* Segmented Mode Toggle */}
+          <div className="flex bg-[var(--bg-subtle)] p-1 rounded-2xl border border-[var(--border)] mb-6">
+            <button
+              type="button"
+              onClick={() => setRoleMode('CUSTOMER')}
+              className={`flex-1 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                roleMode === 'CUSTOMER'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
+              }`}
+            >
+              Customer Login
+            </button>
+            <button
+              type="button"
+              onClick={() => setRoleMode('VENDOR')}
+              className={`flex-1 py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer ${
+                roleMode === 'VENDOR'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text)]'
+              }`}
+            >
+              Vendor Login
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-xs font-extrabold text-[var(--text-secondary)] uppercase tracking-wider mb-2">
-                Username or Email Address
+                Email or Mobile Number
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
@@ -185,8 +166,7 @@ const LoginPage = () => {
                   id="identifier"
                   type="text"
                   required
-                  autoComplete="username"
-                  placeholder="renter or renter@rentit.com"
+                  placeholder={roleMode === 'CUSTOMER' ? 'customer@rentit.com or +91 98765 43210' : 'vendor@rentit.com or +91 98765 43210'}
                   value={formData.identifier}
                   onChange={handleChange}
                   className="input-field pl-10"
@@ -236,6 +216,49 @@ const LoginPage = () => {
                 Create Free Account
               </Link>
             </p>
+          </div>
+        </div>
+
+        {/* Quick Instant Demo Access Buttons (Outside Card Container) */}
+        <div className="card p-5 sm:p-6 shadow-xl border border-[var(--border)] bg-[var(--bg-elevated)] rounded-3xl relative overflow-hidden">
+          <div className="p-1 rounded-2xl">
+            <p className="text-[11px] font-black text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 1-Click Instant Demo Login
+              </span>
+              <span className="text-[9px] text-emerald-500 font-extrabold">AUTO AUTH</span>
+            </p>
+            <div className="grid grid-cols-2 gap-1.5 mb-3">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleQuickDemoLogin('vendor@rentit.com', 'Password123!', 'VENDOR')}
+                className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
+              >
+                <Sparkles className="w-3 h-3" /> Store Vendor
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleQuickDemoLogin('customer', 'Password123!')}
+                className="px-2 py-2.5 rounded-xl text-[11px] font-extrabold bg-[var(--bg-subtle)] text-[var(--text)] border border-[var(--border)] hover:bg-[var(--text)] hover:text-[var(--bg)] flex items-center justify-center gap-1 transition-all cursor-pointer shadow-2xs"
+              >
+                <UserCheck className="w-3 h-3" /> Customer
+              </button>
+            </div>
+            
+            {/* Django Super Admin Direct Quick Auth */}
+            <div className="flex items-center justify-between pt-2.5 border-t border-[var(--border)] text-[10px]">
+              <span className="text-[var(--text-muted)] font-medium">Django SuperAdmin: <strong className="text-[var(--text)] font-bold">djangoadmin</strong></span>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => handleQuickDemoLogin('djangoadmin', 'Password123!')}
+                className="text-[var(--accent)] hover:underline font-extrabold cursor-pointer"
+              >
+                Quick Login
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

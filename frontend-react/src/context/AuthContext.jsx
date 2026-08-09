@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getProfile, login as loginApi, logout as logoutApi, register as registerApi } from '../api/auth';
 import api from '../api/axios';
 
@@ -7,6 +8,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -27,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (credentials) => {
+    queryClient.clear();
     const { data } = await loginApi(credentials);
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
@@ -39,6 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (userData) => {
+    queryClient.clear();
     const { data } = await registerApi(userData);
     localStorage.setItem('accessToken', data.access);
     localStorage.setItem('refreshToken', data.refresh);
@@ -59,6 +63,7 @@ export const AuthProvider = ({ children }) => {
       // Logout should always succeed on the client side even if server errors
       console.error('Logout server error (ignored):', e);
     } finally {
+      queryClient.clear();
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       setUser(null);
