@@ -33,17 +33,53 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset         = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field     = 'slug'
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminUser()]
         return [IsAuthenticatedOrReadOnly()]
 
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        val = self.kwargs[lookup_url_kwarg]
+
+        obj = queryset.filter(slug=val).first()
+        if not obj:
+            obj = queryset.filter(name__iexact=val).first()
+        if not obj and val.isdigit():
+            obj = queryset.filter(id=int(val)).first()
+
+        if obj is None:
+            from rest_framework.exceptions import NotFound
+            raise NotFound("No Category matches the given query.")
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset         = Product.objects.all()
     serializer_class = ProductSerializer
     lookup_field     = 'slug'
+    pagination_class = None
+
+    def get_object(self):
+        queryset = self.filter_queryset(self.get_queryset())
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        val = self.kwargs[lookup_url_kwarg]
+
+        obj = queryset.filter(slug=val).first()
+        if not obj and val.isdigit():
+            obj = queryset.filter(id=int(val)).first()
+
+        if obj is None:
+            from rest_framework.exceptions import NotFound
+            raise NotFound("No Product matches the given query.")
+
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get_queryset(self):
         queryset = Product.objects.filter(is_active=True).order_by('-created_at')
@@ -114,8 +150,10 @@ class ProductViewSet(viewsets.ModelViewSet):
 class ProductImageViewSet(viewsets.ModelViewSet):
     queryset         = ProductImage.objects.all()
     serializer_class = ProductImageSerializer
+    pagination_class = None
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAdminUser()]
         return [IsAuthenticatedOrReadOnly()]
+

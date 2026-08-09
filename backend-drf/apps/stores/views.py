@@ -26,6 +26,7 @@ class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.filter(is_active=True)
     serializer_class = StoreSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -100,6 +101,7 @@ class StoreProductStockViewSet(viewsets.ModelViewSet):
     queryset = StoreProductStock.objects.all()
     serializer_class = StoreProductStockSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
     def get_queryset(self):
         queryset = StoreProductStock.objects.all().select_related('store', 'product')

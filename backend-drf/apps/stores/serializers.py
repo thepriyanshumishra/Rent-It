@@ -17,7 +17,13 @@ class StoreProductStockSerializer(serializers.ModelSerializer):
 
     def get_product_image(self, obj):
         first_img = obj.product.images.first()
-        return first_img.image.url if first_img and first_img.image else None
+        if not first_img:
+            return None
+        if hasattr(first_img, 'image_url') and first_img.image_url:
+            return first_img.image_url
+        if hasattr(first_img, 'image') and first_img.image:
+            return first_img.image.url
+        return None
 
 
 class StoreSerializer(serializers.ModelSerializer):

@@ -9,29 +9,28 @@ import QuotationSlipModal from '../../components/shared/QuotationSlipModal';
 import { useStore } from '../../context/StoreContext';
 import * as rentalsApi from '../../api/rentals';
 import { api } from '../../api';
+import useAuth from '../../hooks/useAuth';
 
 const fmtDate = d => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 export default function VendorOrdersPage() {
   const queryClient = useQueryClient();
   const { selectedStore } = useStore();
+  const { user } = useAuth();
 
   const [pickupCodeInput, setPickupCodeInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrderForSlip, setSelectedOrderForSlip] = useState(null);
 
-  // Fetch orders
+  // Fetch orders — backend already scopes to vendor's managed stores for STAFF role
   const { data: rentals = [], isLoading } = useQuery({
-    queryKey: ['store-orders', selectedStore?.id],
+    queryKey: ['store-orders'],
     queryFn: async () => {
       const res = await api.get('/rentals/orders/');
       const d = res.data;
-      const all = Array.isArray(d) ? d : (d?.results || []);
-      if (selectedStore?.id) {
-        return all.filter(r => !r.store || r.store === selectedStore.id || r.store_code === selectedStore.code);
-      }
-      return all;
+      // Backend returns array (pagination_class=None) or paginated object
+      return Array.isArray(d) ? d : (d?.results || []);
     },
   });
 

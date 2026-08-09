@@ -36,6 +36,10 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def get_primary_image(self, obj):
         primary = obj.images.filter(is_primary=True).first() or obj.images.first()
-        if primary:
-            return primary.image_url or (primary.image.url if primary.image else None)
+        if not primary:
+            return None
+        if hasattr(primary, 'image_url') and primary.image_url:
+            return primary.image_url
+        if hasattr(primary, 'image') and primary.image:
+            return primary.image.url
         return None

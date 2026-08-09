@@ -125,6 +125,7 @@ class RentalOrderViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = RentalOrderSerializer
     queryset = RentalOrder.objects.all()
+    pagination_class = None
 
     def get_queryset(self):
         user = self.request.user
